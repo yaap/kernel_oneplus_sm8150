@@ -31,10 +31,9 @@
 #include <linux/smpboot.h>
 #include <uapi/linux/sched/types.h>
 #include "../time/tick-internal.h"
+#include "../locking/rtmutex_common.h"
 
 #ifdef CONFIG_RCU_BOOST
-
-#include "../locking/rtmutex_common.h"
 
 /*
  * Control variables for per-CPU and per-rcu_node kthreads.  These
@@ -543,7 +542,7 @@ void rcu_read_unlock_special(struct task_struct *t)
 		 */
 		if (IS_ENABLED(CONFIG_RCU_BOOST) && drop_boost_mutex) {
 			preempt_disable();
-			rt_mutex_unlock(&rnp->boost_mtx);
+			rt_mutex_futex_unlock(&rnp->boost_mtx);
 			complete(&rnp->boost_completion);
 			preempt_enable();
 		}
