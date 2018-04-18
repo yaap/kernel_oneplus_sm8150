@@ -875,13 +875,13 @@ int rt6_route_rcv(struct net_device *dev, u8 *opt, int len,
 	}
 
 	if (rinfo->prefix_len == 0)
-		rt = rt6_get_dflt_router(gwaddr, dev);
+		rt = rt6_get_dflt_router(net, gwaddr, dev);
 	else
 		rt = rt6_get_route_info(net, prefix, rinfo->prefix_len,
 					gwaddr, dev);
 
 	if (rt && !lifetime) {
-		ip6_del_rt(rt);
+		ip6_del_rt(net, rt);
 		rt = NULL;
 	}
 
@@ -1098,9 +1098,9 @@ static int __ip6_ins_rt(struct rt6_info *rt, struct nl_info *info,
 	return err;
 }
 
-int ip6_ins_rt(struct rt6_info *rt)
+int ip6_ins_rt(struct net *net, struct rt6_info *rt)
 {
-	struct nl_info info = {	.nl_net = dev_net(rt->dst.dev), };
+	struct nl_info info = {	.nl_net = net, };
 	struct mx6_config mxc = { .mx = NULL, };
 
 	/* Hold dst to account for the reference from the fib6 tree */
@@ -1182,14 +1182,13 @@ static struct rt6_info *rt6_get_pcpu_route(struct rt6_info *rt)
 	return pcpu_rt;
 }
 
-static struct rt6_info *rt6_make_pcpu_route(struct rt6_info *rt)
+static struct rt6_info *rt6_make_pcpu_route(struct net *net,
+					    struct rt6_info *rt)
 {
 	struct rt6_info *pcpu_rt, *prev, **p;
 
 	pcpu_rt = ip6_rt_pcpu_alloc(rt);
 	if (!pcpu_rt) {
-		struct net *net = dev_net(rt->dst.dev);
-
 		dst_hold(&net->ipv6.ip6_null_entry->dst);
 		return net->ipv6.ip6_null_entry;
 	}
@@ -1845,7 +1844,7 @@ uncached_rt_out:
 				 * rt->rt6i_ref makes sure rt can't be released.
 				 */
 				rcu_read_unlock();
-				pcpu_rt = rt6_make_pcpu_route(rt);
+				pcpu_rt = rt6_make_pcpu_route(net, rt);
 				rt6_release(rt);
 			} else {
 				/* rt is already removed from tree */
@@ -2110,7 +2109,7 @@ static struct dst_entry *ip6_negative_advice(struct dst_entry *dst)
 	if (rt) {
 		if (rt->rt6i_flags & RTF_CACHE) {
 			if (rt6_check_expired(rt)) {
-				ip6_del_rt(rt);
+				ip6_del_rt(dev_net(dst->dev), rt);
 				dst = NULL;
 			}
 		} else {
@@ -2131,7 +2130,7 @@ static void ip6_link_failure(struct sk_buff *skb)
 	if (rt) {
 		if (rt->rt6i_flags & RTF_CACHE) {
 			if (dst_hold_safe(&rt->dst))
-				ip6_del_rt(rt);
+				ip6_del_rt(dev_net(rt->dst.dev), rt);
 		} else {
 			struct fib6_node *fn;
 
@@ -3012,9 +3011,9 @@ out:
 
 static int __ip6_del_rt(struct rt6_info *rt, struct nl_info *info)
 {
-	int err;
+	struct net *net = info->nl_net;
 	struct fib6_table *table;
-	struct net *net = dev_net(rt->dst.dev);
+	int err;
 
 	if (rt == net->ipv6.ip6_null_entry) {
 		err = -ENOENT;
@@ -3031,11 +3030,10 @@ out:
 	return err;
 }
 
-int ip6_del_rt(struct rt6_info *rt)
+int ip6_del_rt(struct net *net, struct rt6_info *rt)
 {
-	struct nl_info info = {
-		.nl_net = dev_net(rt->dst.dev),
-	};
+	struct nl_info info = { .nl_net = net };
+
 	return __ip6_del_rt(rt, &info);
 }
 
@@ -3334,13 +3332,15 @@ static struct rt6_info *rt6_add_route_info(struct net *net,
 }
 #endif
 
-struct rt6_info *rt6_get_dflt_router(const struct in6_addr *addr, struct net_device *dev)
+struct rt6_info *rt6_get_dflt_router(struct net *net,
+				     const struct in6_addr *addr,
+				     struct net_device *dev)
 {
 	u32 tb_id = l3mdev_fib_table(dev) ? : addrconf_rt_table(dev, RT6_TABLE_MAIN);
 	struct rt6_info *rt;
 	struct fib6_table *table;
 
-	table = fib6_get_table(dev_net(dev), tb_id);
+	table = fib6_get_table(net, tb_id);
 	if (!table)
 		return NULL;
 
@@ -3357,7 +3357,8 @@ struct rt6_info *rt6_get_dflt_router(const struct in6_addr *addr, struct net_dev
 	return rt;
 }
 
-struct rt6_info *rt6_add_dflt_router(const struct in6_addr *gwaddr,
+struct rt6_info *rt6_add_dflt_router(struct net *net,
+				     const struct in6_addr *gwaddr,
 				     struct net_device *dev,
 				     unsigned int pref)
 {
@@ -3371,7 +3372,7 @@ struct rt6_info *rt6_add_dflt_router(const struct in6_addr *gwaddr,
 		.fc_type = RTN_UNICAST,
 		.fc_nlinfo.portid = 0,
 		.fc_nlinfo.nlh = NULL,
-		.fc_nlinfo.nl_net = dev_net(dev),
+		.fc_nlinfo.nl_net = net,
 	};
 
 	cfg.fc_gateway = *gwaddr;
@@ -3384,7 +3385,7 @@ struct rt6_info *rt6_add_dflt_router(const struct in6_addr *gwaddr,
 			table->flags |= RT6_TABLE_HAS_DFLT_ROUTER;
 	}
 
-	return rt6_get_dflt_router(gwaddr, dev);
+	return rt6_get_dflt_router(net, gwaddr, dev);
 }
 
 int rt6_addrconf_purge(struct rt6_info *rt, void *arg) {
@@ -3512,12 +3513,12 @@ static int ip6_pkt_prohibit_out(struct net *net, struct sock *sk, struct sk_buff
  *	Allocate a dst for local (unicast / anycast) address.
  */
 
-struct rt6_info *addrconf_dst_alloc(struct inet6_dev *idev,
+struct rt6_info *addrconf_dst_alloc(struct net *net,
+				    struct inet6_dev *idev,
 				    const struct in6_addr *addr,
 				    bool anycast)
 {
 	u32 tb_id;
-	struct net *net = dev_net(idev->dev);
 	struct net_device *dev = idev->dev;
 	struct rt6_info *rt;
 
