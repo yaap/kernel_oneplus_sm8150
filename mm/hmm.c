@@ -160,16 +160,45 @@ static void hmm_invalidate_range(struct hmm *hmm,
 	up_read(&hmm->mirrors_sem);
 }
 
-static void hmm_invalidate_range_start(struct mmu_notifier *mn,
+static void hmm_release(struct mmu_notifier *mn, struct mm_struct *mm)
+{
+	struct hmm_mirror *mirror;
+	struct hmm *hmm = mm->hmm;
+
+	down_write(&hmm->mirrors_sem);
+	mirror = list_first_entry_or_null(&hmm->mirrors, struct hmm_mirror,
+					  list);
+	while (mirror) {
+		list_del_init(&mirror->list);
+		if (mirror->ops->release) {
+			/*
+			 * Drop mirrors_sem so callback can wait on any pending
+			 * work that might itself trigger mmu_notifier callback
+			 * and thus would deadlock with us.
+			 */
+			up_write(&hmm->mirrors_sem);
+			mirror->ops->release(mirror);
+			down_write(&hmm->mirrors_sem);
+		}
+		mirror = list_first_entry_or_null(&hmm->mirrors,
+						  struct hmm_mirror, list);
+	}
+	up_write(&hmm->mirrors_sem);
+}
+
+static int hmm_invalidate_range_start(struct mmu_notifier *mn,
 				       struct mm_struct *mm,
 				       unsigned long start,
-				       unsigned long end)
+				       unsigned long end,
+				       bool blockable)
 {
 	struct hmm *hmm = mm->hmm;
 
 	VM_BUG_ON(!hmm);
 
 	atomic_inc(&hmm->sequence);
+
+	return 0;
 }
 
 static void hmm_invalidate_range_end(struct mmu_notifier *mn,
