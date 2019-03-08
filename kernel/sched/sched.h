@@ -3185,6 +3185,7 @@ struct sched_avg_stats {
 	int nr;
 	int nr_misfit;
 	int nr_max;
+	int nr_scaled;
 };
 extern void sched_get_nr_running_avg(struct sched_avg_stats *stats);
 
