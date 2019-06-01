@@ -227,7 +227,7 @@
 				39 01 00 00 00 00 03 F0 5A 5A
 				39 01 00 00 00 00 03 FC 5A 5A
 				15 01 00 00 00 00 02 B0 1E
-				39 01 00 00 00 00 06 C5 09 10 B4 24 FB	/* FFC Setting; 0x09 : Enable */
+				39 01 00 00 00 00 06 C5 08 10 B4 24 FB	/* FFC Setting; 0x08 : Disable */
 				39 01 00 00 00 00 03 F0 A5 A5
 				39 01 00 00 00 00 03 FC A5 A5
 				/* OSC Spread Setting */
@@ -850,7 +850,7 @@
 				39 01 00 00 00 00 03 F0 5A 5A
 				39 01 00 00 00 00 03 FC 5A 5A
 				15 01 00 00 00 00 02 B0 1E
-				39 01 00 00 00 00 06 C5 09 10 B4 24 FB	/* FFC Setting; 0x09 : Enable */
+				39 01 00 00 00 00 06 C5 08 10 B4 24 FB	/* FFC Setting; 0x08 : Disable */
 				39 01 00 00 00 00 03 F0 A5 A5
 				39 01 00 00 00 00 03 FC A5 A5
 				/* OSC Spread Setting */
@@ -1478,7 +1478,7 @@
 				39 01 00 00 00 00 03 F0 5A 5A
 				39 01 00 00 00 00 03 FC 5A 5A
 				15 01 00 00 00 00 02 B0 1E
-				39 01 00 00 00 00 06 C5 09 10 B4 24 FB	/* FFC Setting; 0x09 : Enable */
+				39 01 00 00 00 00 06 C5 08 10 B4 24 FB	/* FFC Setting; 0x08 : Disable */
 				39 01 00 00 00 00 03 F0 A5 A5
 				39 01 00 00 00 00 03 FC A5 A5
 				/* OSC Spread Setting */
@@ -2102,7 +2102,7 @@
 				39 01 00 00 00 00 03 F0 5A 5A
 				39 01 00 00 00 00 03 FC 5A 5A
 				15 01 00 00 00 00 02 B0 1E
-				39 01 00 00 00 00 06 C5 09 10 B4 24 FB	/* FFC Setting; 0x09 : Enable */
+				39 01 00 00 00 00 06 C5 08 10 B4 24 FB	/* FFC Setting; 0x08 : Disable */
 				39 01 00 00 00 00 03 F0 A5 A5
 				39 01 00 00 00 00 03 FC A5 A5
 				/* OSC Spread Setting */
