@@ -19,7 +19,7 @@
 #include <media/rc-core.h>
 #include "rc-core-priv.h"
 
-#define LIRCBUF_SIZE 256
+#define LIRCBUF_SIZE 1024
 
 /**
  * ir_lirc_raw_event() - Send raw IR data to lirc to be relayed to userspace
