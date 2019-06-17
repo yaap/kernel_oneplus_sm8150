@@ -57,7 +57,7 @@ void check_max_cap_vs_cpu_scale(int cpu, struct sched_group_energy *sge)
 	unsigned long max_cap, cpu_scale;
 
 	max_cap = sge->cap_states[sge->nr_cap_states - 1].cap;
-	cpu_scale = topology_get_cpu_scale(NULL, cpu);
+	cpu_scale = topology_get_cpu_scale(cpu);
 
 	if (max_cap == cpu_scale)
 		return;

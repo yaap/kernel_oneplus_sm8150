@@ -1323,12 +1323,12 @@ sd_init(struct sched_domain_topology_level *tl,
 	 */
 
 	if (sd->flags & SD_ASYM_CPUCAPACITY) {
-		long capacity = arch_scale_cpu_capacity(NULL, sd_id);
+		long capacity = arch_scale_cpu_capacity(sd_id);
 		bool disable = true;
 		int i;
 
 		for_each_cpu(i, sched_domain_span(sd)) {
-			if (capacity != arch_scale_cpu_capacity(NULL, i)) {
+			if (capacity != arch_scale_cpu_capacity(i)) {
 				disable = false;
 				break;
 			}
@@ -1886,12 +1886,12 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
 
 		sd = *per_cpu_ptr(d.sd, i);
 
-		if ((max_cpu < 0) || (arch_scale_cpu_capacity(NULL, i) >
-				arch_scale_cpu_capacity(NULL, max_cpu)))
+		if ((max_cpu < 0) || (arch_scale_cpu_capacity(i) >
+				arch_scale_cpu_capacity(max_cpu)))
 			WRITE_ONCE(d.rd->max_cap_orig_cpu, i);
 
-		if ((min_cpu < 0) || (arch_scale_cpu_capacity(NULL, i) <
-				arch_scale_cpu_capacity(NULL, min_cpu)))
+		if ((min_cpu < 0) || (arch_scale_cpu_capacity(i) <
+				arch_scale_cpu_capacity(min_cpu)))
 			WRITE_ONCE(d.rd->min_cap_orig_cpu, i);
 
 		cpu_attach_domain(sd, d.rd, i);
@@ -1902,10 +1902,10 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
 		int max_cpu = READ_ONCE(d.rd->max_cap_orig_cpu);
 		int min_cpu = READ_ONCE(d.rd->min_cap_orig_cpu);
 
-		if ((arch_scale_cpu_capacity(NULL, i)
-				!=  arch_scale_cpu_capacity(NULL, min_cpu)) &&
-				(arch_scale_cpu_capacity(NULL, i)
-				!=  arch_scale_cpu_capacity(NULL, max_cpu))) {
+		if ((arch_scale_cpu_capacity(i)
+				!=  arch_scale_cpu_capacity(min_cpu)) &&
+				(arch_scale_cpu_capacity(i)
+				!=  arch_scale_cpu_capacity(max_cpu))) {
 			WRITE_ONCE(d.rd->mid_cap_orig_cpu, i);
 			break;
 		}
@@ -1918,8 +1918,7 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
 	 */
 	if (d.rd->max_cap_orig_cpu != -1) {
 		d.rd->max_cpu_capacity.cpu = d.rd->max_cap_orig_cpu;
-		d.rd->max_cpu_capacity.val = arch_scale_cpu_capacity(NULL,
-						d.rd->max_cap_orig_cpu);
+		d.rd->max_cpu_capacity.val = arch_scale_cpu_capacity(d.rd->max_cap_orig_cpu);
 	}
 
 	rcu_read_unlock();
