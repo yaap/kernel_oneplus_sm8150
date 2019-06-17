@@ -316,7 +316,7 @@ static void sugov_get_util(unsigned long *util, unsigned long *max, int cpu)
 	unsigned long cfs_max;
 	struct sugov_cpu *loadcpu = &per_cpu(sugov_cpu, cpu);
 
-	cfs_max = arch_scale_cpu_capacity(NULL, cpu);
+	cfs_max = arch_scale_cpu_capacity(cpu);
 
 	*util = min(rq->cfs.avg.util_avg, cfs_max);
 	*max = cfs_max;
