@@ -20,6 +20,14 @@ ifeq ($(CONFIG_RELOCATABLE), y)
 # with the relocation offsets always being zero.
 LDFLAGS_vmlinux		+= -pie -Bsymbolic -z notext \
 			$(call ld-option, --no-apply-dynamic-relocs)
+
+# Pass -shared for bfd and -pie for lld to minimize Image size on both
+ifeq ($(ld-name),bfd)
+LDFLAGS_vmlinux		+= -shared
+endif
+ifeq ($(ld-name),lld)
+LDFLAGS_vmlinux		+= -pie
+endif
 endif
 
 ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
