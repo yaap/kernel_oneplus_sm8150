@@ -362,7 +362,7 @@ int elliptic_ultrasound_tx_port_set(struct snd_kcontrol *kcontrol,
 	int ret;
 
 	if (ultrasound_tx_port_cache == ucontrol->value.integer.value[0]) {
-		EL_PRINT_E("ultrasound_tx_port_set: ignoring duplicate request");
+		EL_PRINT_D("ultrasound_tx_port_set: ignoring duplicate request");
 		return 0;
 	}
 
@@ -372,7 +372,7 @@ int elliptic_ultrasound_tx_port_set(struct snd_kcontrol *kcontrol,
 	else
 		ret = elliptic_close_port(ULTRASOUND_TX_PORT_ID);
 
-	EL_PRINT_E("ultrasound_tx_port: enable=%d ret=%d",
+	EL_PRINT_D("ultrasound_tx_port: enable=%d ret=%d",
 		ultrasound_tx_port_cache, ret);
 
 	return ret;
@@ -393,7 +393,7 @@ int elliptic_ultrasound_rx_port_set(struct snd_kcontrol *kcontrol,
 	int ret;
 
 	if (ultrasound_rx_port_cache == ucontrol->value.integer.value[0]) {
-		EL_PRINT_E("ultrasound_rx_port_set: ignoring duplicate request");
+		EL_PRINT_D("ultrasound_rx_port_set: ignoring duplicate request");
 		return 0;
 	}
 
@@ -818,7 +818,7 @@ int elliptic_system_configuration_param_put(
 		const size_t csi =
 			mc->shift -
 			ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_0;
-		EL_PRINT_E("ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_XX csi:%zu", csi);
+		EL_PRINT_D("ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_XX csi:%zu", csi);
 		if (csi >=
 			ARRAY_SIZE(elliptic_system_configuration_cache.custom_settings))
 			return -EINVAL;
