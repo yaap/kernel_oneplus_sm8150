@@ -3128,6 +3128,8 @@ void _sde_crtc_clear_dim_layers_v1(struct drm_crtc_state *state)
 		memset(&cstate->dim_layer[i], 0, sizeof(cstate->dim_layer[i]));
 
 	cstate->num_dim_layers = 0;
+
+	sde_hw_dim_go_inactive();
 }
 
 /**
@@ -3176,6 +3178,11 @@ static void _sde_crtc_set_dim_layer_v1(struct drm_crtc *crtc,
 	}
 	/* populate from user space */
 	cstate->num_dim_layers = count;
+	if (count == 0) {
+		sde_hw_dim_go_inactive();
+		return;
+	}
+
 	for (i = 0; i < count; i++) {
 		user_cfg = &dim_layer_v1.layer_cfg[i];
 
@@ -3521,7 +3528,9 @@ extern int oneplus_panel_status;
 extern int backup_dim_status;
 extern bool backup_dimlayer_hbm;
 extern bool HBM_flag;
-extern int dsi_panel_tx_cmd_set(struct dsi_panel *panel, enum dsi_cmd_set_type type);
+extern int dsi_panel_tx_cmd_set (struct dsi_panel *panel, enum dsi_cmd_set_type type);
+extern int __dsi_panel_tx_cmd_set (struct dsi_panel *panel, enum dsi_cmd_set_type type,
+					bool fod_usage);
 int oneplus_dim_status = 0;
 int oneplus_aod_fod = 0;
 int oneplus_aod_dc = 0;
@@ -3587,7 +3596,7 @@ ssize_t oneplus_display_notify_dim(struct device *dev,
 		pr_debug("notify dim %d,aod = %d press= %d aod_hide =%d\n",
 			oneplus_dim_status, dsi_display->panel->aod_status, oneplus_onscreenfp_status, aod_layer_hide);
 	if (oneplus_dim_status == 1 && HBM_flag) {
-		rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_ON_5);
+		rc = __dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_ON_5, true);
 		if (rc) {
 			pr_debug("failed to send DSI_CMD_SET_HBM_ON_5 cmds, rc=%d\n", rc);
 			return rc;
