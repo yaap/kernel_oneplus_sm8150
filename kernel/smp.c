@@ -88,6 +88,7 @@ int smpcfd_dying_cpu(unsigned int cpu)
 	 * still pending.
 	 */
 	flush_smp_call_function_queue(false);
+	irq_work_run();
 	return 0;
 }
 
@@ -198,6 +199,14 @@ int generic_exec_single(int cpu, struct __call_single_data *csd, smp_call_func_t
 void generic_smp_call_function_single_interrupt(void)
 {
 	flush_smp_call_function_queue(true);
+
+	/*
+	 * Handle irq works queued remotely by irq_work_queue_on().
+	 * Smp functions above are typically synchronous so they
+	 * better run first since some other CPUs may be busy waiting
+	 * for them.
+	 */
+	irq_work_run();
 }
 
 /**
@@ -274,14 +283,6 @@ static void flush_smp_call_function_queue(bool warn_cpu_offline)
 		csd_unlock(csd);
 		func(info);
 	}
-
-	/*
-	 * Handle irq works queued remotely by irq_work_queue_on().
-	 * Smp functions above are typically synchronous so they
-	 * better run first since some other CPUs may be busy waiting
-	 * for them.
-	 */
-	irq_work_run();
 }
 
 void flush_smp_call_function_from_idle(void)
