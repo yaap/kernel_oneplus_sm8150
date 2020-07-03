@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2016-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -18,7 +18,6 @@
 
 #define CNSS_MAX_FILE_NAME		20
 #define CNSS_MAX_TIMESTAMP_LEN		32
-#define CNSS_MAX_DEV_MEM_NUM		4
 
 /*
  * Temporary change for compilation, will be removed
@@ -61,11 +60,6 @@ struct cnss_device_version {
 	u32 minor_version;
 };
 
-struct cnss_dev_mem_info {
-	u64 start;
-	u64 size;
-};
-
 struct cnss_soc_info {
 	void __iomem *va;
 	phys_addr_t pa;
@@ -76,7 +70,6 @@ struct cnss_soc_info {
 	uint32_t fw_version;
 	char fw_build_timestamp[CNSS_MAX_TIMESTAMP_LEN + 1];
 	struct cnss_device_version device_version;
-	struct cnss_dev_mem_info dev_mem_info[CNSS_MAX_DEV_MEM_NUM];
 };
 
 struct cnss_wlan_runtime_ops {
@@ -103,7 +96,6 @@ struct cnss_wlan_driver {
 	struct cnss_wlan_runtime_ops *runtime_ops;
 	const struct pci_device_id *id_table;
 	enum cnss_driver_mode (*get_driver_mode)(void);
-	enum cnss_suspend_mode *suspend_mode;
 };
 
 struct cnss_usb_wlan_driver {
@@ -181,11 +173,6 @@ enum cnss_driver_mode {
 	CNSS_CCPM,
 	CNSS_QVIT,
 	CNSS_CALIBRATION,
-};
-
-enum cnss_suspend_mode {
-	CNSS_SUSPEND_LEGACY,
-	CNSS_SUSPEND_POWER_DOWN,
 };
 
 enum cnss_recovery_reason {
