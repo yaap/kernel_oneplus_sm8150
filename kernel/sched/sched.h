@@ -2646,6 +2646,7 @@ static inline void cpufreq_update_util(struct rq *rq, unsigned int flags)
 		data->func(data, clock, flags);
 }
 
+#ifdef CONFIG_UCLAMP_TASK
 /*
  * When uclamp is compiled in, the aggregation at rq level is 'turned off'
  * by default in the fast path and only gets turned on once userspace performs
