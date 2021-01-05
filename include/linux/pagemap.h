@@ -551,7 +551,7 @@ static inline __sched int wait_on_page_locked_killable(struct page *page)
  */
 static inline __sched void wait_on_page_writeback(struct page *page)
 {
-	if (PageWriteback(page))
+	while (PageWriteback(page))
 		wait_on_page_bit(page, PG_writeback);
 }
 
