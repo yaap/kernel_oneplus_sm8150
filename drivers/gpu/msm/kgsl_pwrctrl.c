@@ -915,6 +915,7 @@ static ssize_t __timer_store(struct device *dev, struct device_attribute *attr,
 	if (device == NULL)
 		return 0;
 
+	return count;
 	ret = kgsl_sysfs_store(buf, &val);
 	if (ret)
 		return ret;
