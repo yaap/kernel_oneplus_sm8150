@@ -2445,30 +2445,6 @@ const struct cpumask *const cpu_perf_mask = cpu_possible_mask;
 #endif
 EXPORT_SYMBOL(cpu_perf_mask);
 
-#if CONFIG_BIG_CPU_FIRST_MASK
-static const unsigned long perf_cpu_first_bits = CONFIG_BIG_CPU_FIRST_MASK;
-const struct cpumask *const cpu_perf_first_mask = to_cpumask(&perf_cpu_first_bits);
-#else
-const struct cpumask *const cpu_perf_first_mask = cpu_possible_mask;
-#endif
-EXPORT_SYMBOL(cpu_perf_first_mask);
-
-#if CONFIG_BIG_CPU_SECOND_MASK
-static const unsigned long perf_cpu_second_bits = CONFIG_BIG_CPU_SECOND_MASK;
-const struct cpumask *const cpu_perf_second_mask = to_cpumask(&perf_cpu_second_bits);
-#else
-const struct cpumask *const cpu_perf_second_mask = cpu_possible_mask;
-#endif
-EXPORT_SYMBOL(cpu_perf_second_mask);
-
-#if CONFIG_BIG_CPU_THIRD_MASK
-static const unsigned long perf_cpu_third_bits = CONFIG_BIG_CPU_THIRD_MASK;
-const struct cpumask *const cpu_perf_third_mask = to_cpumask(&perf_cpu_third_bits);
-#else
-const struct cpumask *const cpu_perf_third_mask = cpu_possible_mask;
-#endif
-EXPORT_SYMBOL(cpu_perf_third_mask);
-
 #if CONFIG_PRIME_CPU_MASK
 static const unsigned long prime_cpu_bits = CONFIG_PRIME_CPU_MASK;
 const struct cpumask *const cpu_prime_mask = to_cpumask(&prime_cpu_bits);
@@ -2476,6 +2452,14 @@ const struct cpumask *const cpu_prime_mask = to_cpumask(&prime_cpu_bits);
 const struct cpumask *const cpu_prime_mask = cpu_possible_mask;
 #endif
 EXPORT_SYMBOL(cpu_prime_mask);
+
+#if defined(CONFIG_BIG_CPU_MASK) && defined(CONFIG_PRIME_CPU_MASK)
+static const unsigned long hp_cpu_bits = CONFIG_BIG_CPU_MASK + CONFIG_PRIME_CPU_MASK;
+const struct cpumask *const cpu_hp_mask = to_cpumask(&hp_cpu_bits);
+#else
+const struct cpumask *const cpu_hp_mask = cpu_possible_mask;
+#endif
+EXPORT_SYMBOL(cpu_hp_mask);
 
 void init_cpu_present(const struct cpumask *src)
 {
