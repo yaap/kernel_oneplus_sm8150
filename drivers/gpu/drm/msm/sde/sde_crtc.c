@@ -3341,24 +3341,11 @@ ssize_t oneplus_display_notify_dim(struct device *dev,
 	if (dim_status == oneplus_dim_status)
 		return count;
 	oneplus_dim_status = dim_status;
-	if (is_stock == 0) {
-		oneplus_dimlayer_hbm_enable = oneplus_dim_status != 0;
-		backup_dimlayer_hbm = oneplus_dimlayer_hbm_enable;
-		backup_dim_status = oneplus_dim_status;
-		pr_debug("notify dim %d,aod = %d press= %d aod_hide =%d oneplus_dimlayer_hbm_enable = %d\n",
-			oneplus_dim_status, dsi_display->panel->aod_status, oneplus_onscreenfp_status, aod_layer_hide, oneplus_dimlayer_hbm_enable);
-	} else
-		pr_debug("notify dim %d,aod = %d press= %d aod_hide =%d\n",
-			oneplus_dim_status, dsi_display->panel->aod_status, oneplus_onscreenfp_status, aod_layer_hide);
-	if (oneplus_dim_status == 1 && HBM_flag) {
-		rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_ON_5);
-		if (rc) {
-			pr_debug("failed to send DSI_CMD_SET_HBM_ON_5 cmds, rc=%d\n", rc);
-			return rc;
-		}
-		pr_debug("Notify dim not commit,send DSI_CMD_SET_HBM_ON_5 cmds\n");
-		return count;
-	}
+	oneplus_dimlayer_hbm_enable = oneplus_dim_status != 0;
+	backup_dimlayer_hbm = oneplus_dimlayer_hbm_enable;
+	backup_dim_status = oneplus_dim_status;
+	pr_debug("notify dim %d,aod = %d press= %d aod_hide =%d oneplus_dimlayer_hbm_enable = %d\n",
+		oneplus_dim_status, dsi_display->panel->aod_status, oneplus_onscreenfp_status, aod_layer_hide, oneplus_dimlayer_hbm_enable);
 	drm_modeset_lock_all(drm_dev);
 
 	state = drm_atomic_state_alloc(drm_dev);
@@ -5578,70 +5565,60 @@ static int sde_crtc_onscreenfinger_atomic_check(struct sde_crtc_state *cstate,
     }
 	SDE_DEBUG("fp_index=%d,fppressed_index=%d,aod_index=%d\n", fp_index, fppressed_index, aod_index);
 
-	if (is_stock == 0) {
-		if (oneplus_dimlayer_hbm_enable || dim_backlight == 1) {
-			if (fp_index >= 0 && fppressed_index >= 0 &&
-				pstates[fp_index].stage >= pstates[fppressed_index].stage) {
-				SDE_ERROR("Bug!!@@@@: fp layer top of fppressed layer\n");
-				return -EINVAL;
-			}
+	if (oneplus_dimlayer_hbm_enable || dim_backlight == 1) {
+		if (fp_index >= 0 && fppressed_index >= 0 &&
+			pstates[fp_index].stage >= pstates[fppressed_index].stage) {
+			SDE_ERROR("Bug!!@@@@: fp layer top of fppressed layer\n");
+			return -EINVAL;
+		}
 
-			if (fppressed_index >= 0) {
-				if (zpos > pstates[fppressed_index].stage)
-					zpos = pstates[fppressed_index].stage;
-				pstates[fppressed_index].stage++;
-			}
+		if (fppressed_index >= 0) {
+			if (zpos > pstates[fppressed_index].stage)
+				zpos = pstates[fppressed_index].stage;
+			pstates[fppressed_index].stage++;
+		}
 
-			if (fp_index >= 0) {
-				if (zpos > pstates[fp_index].stage)
-					zpos = pstates[fp_index].stage;
-				pstates[fp_index].stage++;
-			}
+		if (fp_index >= 0) {
+			if (zpos > pstates[fp_index].stage)
+				zpos = pstates[fp_index].stage;
+			pstates[fp_index].stage++;
+		}
 
-			for (i = 0; i < cnt; i++) {
-				if (i == fp_index || i == fppressed_index)
-					continue;
+		for (i = 0; i < cnt; i++) {
+			if (i == fp_index || i == fppressed_index)
+				continue;
 
-				if (pstates[i].stage >= zpos) {
-					// SDE_ERROR("Warn!!: the fp layer not on top");
-					pstates[i].stage++;
-				}
-			}
-
-			if (zpos == INT_MAX) {
-				zpos = 0;
-				for (i = 0; i < cnt; i++) {
-					if (pstates[i].stage > zpos)
-						zpos = pstates[i].stage;
-				}
-				zpos++;
-			}
-
-			if (oneplus_dimlayer_hbm_enable)
-				cstate->fingerprint_mode = true;
-			else
-				cstate->fingerprint_mode = false;
-
-			if (fp_index >= 0)
-				pstates[fp_index].sde_pstate->property_values[PLANE_PROP_ALPHA].value = 0;
-
-			if (sde_crtc_config_fingerprint_dim_layer(&cstate->base, zpos))
-				//SDE_DEBUG("Failed to config dim layer\n");
-				return -EINVAL;
-
-			if (fppressed_index >= 0)
-				cstate->fingerprint_pressed = true;
-			else
-				cstate->fingerprint_pressed = false;
-		} else {
-			cstate->fingerprint_dim_layer = NULL;
-			cstate->fingerprint_pressed = false;
-			cstate->fingerprint_mode = false;
-			for (i = 0; i < cnt; i++) {
-				if (pstates[i].sde_pstate->property_values[PLANE_PROP_ALPHA].value == 0)
-					SDE_DEBUG("pstates PLANE_PROP_ALPHA value is 0\n");
+			if (pstates[i].stage >= zpos) {
+				// SDE_ERROR("Warn!!: the fp layer not on top");
+				pstates[i].stage++;
 			}
 		}
+
+		if (zpos == INT_MAX) {
+			zpos = 0;
+			for (i = 0; i < cnt; i++) {
+				if (pstates[i].stage > zpos)
+					zpos = pstates[i].stage;
+			}
+			zpos++;
+		}
+
+		if (oneplus_dimlayer_hbm_enable)
+			cstate->fingerprint_mode = true;
+		else
+			cstate->fingerprint_mode = false;
+
+		if (fp_index >= 0)
+			pstates[fp_index].sde_pstate->property_values[PLANE_PROP_ALPHA].value = 0;
+
+		if (sde_crtc_config_fingerprint_dim_layer(&cstate->base, zpos))
+			//SDE_DEBUG("Failed to config dim layer\n");
+			return -EINVAL;
+
+		if (fppressed_index >= 0)
+			cstate->fingerprint_pressed = true;
+		else
+			cstate->fingerprint_pressed = false;
 
 		if (fp_mode == 1 && !oneplus_dimlayer_hbm_enable) {
 			cstate->fingerprint_mode = true;
