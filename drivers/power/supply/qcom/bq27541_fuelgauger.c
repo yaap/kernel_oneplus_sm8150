@@ -1072,7 +1072,7 @@ static int bq27541_set_lcd_off_status(int off)
 			bq27541_di->lcd_off_delt_soc, soc,
 					bq27541_di->soc_pre);
 			get_current_time(&bq27541_di->lcd_off_time);
-					bq27541_di->lcd_is_off = true;
+			bq27541_di->lcd_is_off = true;
 		} else {
 			bq27541_di->lcd_is_off = false;
 			bq27541_di->lcd_off_delt_soc = 0;
@@ -2044,9 +2044,6 @@ static int bq27541_battery_suspend(struct device *dev)
 	}
 	return 0;
 }
-
-/*1 minute*/
-#define RESUME_TIME  60
 
 static int bq27541_battery_resume(struct device *dev)
 {
