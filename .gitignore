@@ -15,7 +15,6 @@
 *.bz2
 *.c.[012]*.*
 *.dtb
-*.dtbo
 *.dtb.S
 *.dwo
 *.elf
@@ -131,5 +130,3 @@ kernel/configs/android-*.cfg
 #Ignoring Android.bp link file
 #
 Android.bp
-
-kernelzip/
