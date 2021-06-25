@@ -51,7 +51,6 @@
 #include "soc/qcom/secure_buffer.h"
 
 #define CREATE_TRACE_POINTS
-#include "sde_trace.h"
 
 /* defines for secure channel call */
 #define MEM_PROTECT_SD_CTRL_SWITCH 0x18
@@ -366,20 +365,12 @@ static void _sde_debugfs_destroy(struct sde_kms *sde_kms)
 
 static int sde_kms_enable_vblank(struct msm_kms *kms, struct drm_crtc *crtc)
 {
-	int ret = 0;
-
-	SDE_ATRACE_BEGIN("sde_kms_enable_vblank");
-	ret = sde_crtc_vblank(crtc, true);
-	SDE_ATRACE_END("sde_kms_enable_vblank");
-
-	return ret;
+	return sde_crtc_vblank(crtc, true);
 }
 
 static void sde_kms_disable_vblank(struct msm_kms *kms, struct drm_crtc *crtc)
 {
-	SDE_ATRACE_BEGIN("sde_kms_disable_vblank");
 	sde_crtc_vblank(crtc, false);
-	SDE_ATRACE_END("sde_kms_disable_vblank");
 }
 
 static void sde_kms_wait_for_frame_transfer_complete(struct msm_kms *kms,
@@ -992,13 +983,12 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 		return;
 	priv = dev->dev_private;
 
-	SDE_ATRACE_BEGIN("prepare_commit");
 	rc = sde_power_resource_enable(&priv->phandle, sde_kms->core_client,
 			true);
 	if (rc) {
 		SDE_ERROR("failed to enable power resource %d\n", rc);
 		SDE_EVT32(rc, SDE_EVTLOG_ERROR);
-		goto end;
+		return;
 	}
 
 	if (sde_kms->first_kickoff) {
@@ -1023,8 +1013,6 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	 * transitions prepare below if any transtions is required.
 	 */
 	sde_kms_prepare_secure_transition(kms, state);
-end:
-	SDE_ATRACE_END("prepare_commit");
 }
 
 static void sde_kms_commit(struct msm_kms *kms,
@@ -1044,7 +1032,6 @@ static void sde_kms_commit(struct msm_kms *kms,
 		return;
 	}
 
-	SDE_ATRACE_BEGIN("sde_kms_commit");
 	for_each_crtc_in_state(old_state, crtc, old_crtc_state, i) {
 		if (crtc->state->active) {
 			SDE_EVT32(DRMID(crtc));
@@ -1052,7 +1039,6 @@ static void sde_kms_commit(struct msm_kms *kms,
 		}
 	}
 
-	SDE_ATRACE_END("sde_kms_commit");
 }
 
 void sde_kms_release_splash_resource(struct sde_kms *sde_kms,
@@ -1135,7 +1121,6 @@ static void sde_kms_complete_commit(struct msm_kms *kms,
 		return;
 	}
 
-	SDE_ATRACE_BEGIN("sde_kms_complete_commit");
 
 	for_each_crtc_in_state(old_state, crtc, old_crtc_state, i) {
 		sde_crtc_complete_commit(crtc, old_crtc_state);
@@ -1175,7 +1160,6 @@ static void sde_kms_complete_commit(struct msm_kms *kms,
 		sde_kms_release_splash_resource(sde_kms, crtc);
 
 	SDE_EVT32_VERBOSE(SDE_EVTLOG_FUNC_EXIT);
-	SDE_ATRACE_END("sde_kms_complete_commit");
 }
 
 static void sde_kms_wait_for_commit_done(struct msm_kms *kms,
@@ -1207,7 +1191,6 @@ static void sde_kms_wait_for_commit_done(struct msm_kms *kms,
 		return;
 	}
 
-	SDE_ATRACE_BEGIN("sde_kms_wait_for_commit_done");
 	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head) {
 		if (encoder->crtc != crtc)
 			continue;
@@ -1227,7 +1210,6 @@ static void sde_kms_wait_for_commit_done(struct msm_kms *kms,
 		sde_crtc_complete_flip(crtc, NULL);
 	}
 
-	SDE_ATRACE_END("sde_ksm_wait_for_commit_done");
 }
 
 static void sde_kms_prepare_fence(struct msm_kms *kms,
@@ -1242,7 +1224,6 @@ static void sde_kms_prepare_fence(struct msm_kms *kms,
 		return;
 	}
 
-	SDE_ATRACE_BEGIN("sde_kms_prepare_fence");
 
 	/* old_state actually contains updated crtc pointers */
 	for_each_crtc_in_state(old_state, crtc, old_crtc_state, i) {
@@ -1250,7 +1231,6 @@ static void sde_kms_prepare_fence(struct msm_kms *kms,
 			sde_crtc_prepare_commit(crtc, old_crtc_state);
 	}
 
-	SDE_ATRACE_END("sde_kms_prepare_fence");
 }
 
 /**
@@ -2397,7 +2377,6 @@ static int sde_kms_atomic_check(struct msm_kms *kms,
 	sde_kms = to_sde_kms(kms);
 	dev = sde_kms->dev;
 
-	SDE_ATRACE_BEGIN("atomic_check");
 	if (sde_kms_is_suspend_blocked(dev)) {
 		SDE_DEBUG("suspended, skip atomic_check\n");
 		ret = -EBUSY;
@@ -2416,7 +2395,6 @@ static int sde_kms_atomic_check(struct msm_kms *kms,
 	 */
 	ret = sde_kms_check_secure_transition(kms, state);
 end:
-	SDE_ATRACE_END("atomic_check");
 	return ret;
 }
 

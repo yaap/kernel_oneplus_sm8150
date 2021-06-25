@@ -21,7 +21,6 @@
 #include "sde_hw_interrupts.h"
 #include "sde_core_irq.h"
 #include "sde_crtc.h"
-#include "sde_trace.h"
 #include "sde_plane.h"
 #include "shd_drm.h"
 #include "shd_hw.h"
@@ -79,7 +78,6 @@ static void sde_encoder_phys_shd_vblank_irq(void *arg, int irq_idx)
 	if (!hw_ctl)
 		return;
 
-	SDE_ATRACE_BEGIN("vblank_irq");
 
 	/*
 	 * only decrement the pending flush count if we've actually flushed
@@ -136,7 +134,6 @@ not_flushed:
 	/* Signal any waiting atomic commit thread */
 	wake_up_all(&phys_enc->pending_kickoff_wq);
 
-	SDE_ATRACE_END("vblank_irq");
 }
 
 static int _sde_encoder_phys_shd_register_irq(

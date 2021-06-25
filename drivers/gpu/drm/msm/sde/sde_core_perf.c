@@ -23,7 +23,6 @@
 #include "msm_prop.h"
 
 #include "sde_kms.h"
-#include "sde_trace.h"
 #include "sde_crtc.h"
 #include "sde_core_perf.h"
 #include "sde_connector.h"
@@ -221,29 +220,6 @@ static void _sde_core_perf_calc_crtc(struct sde_kms *kms,
 		perf->core_clk_rate = max(kms->perf.fix_core_clk_rate,
 						perf->core_clk_rate);
 	}
-
-	SDE_EVT32(DRMID(crtc), perf->core_clk_rate,
-		GET_H32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_MNOC]),
-		GET_L32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_MNOC]),
-		GET_H32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_LLCC]),
-		GET_L32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_LLCC]),
-		GET_H32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_EBI]),
-		GET_L32(perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_EBI]));
-	SDE_EVT32(DRMID(crtc),
-		GET_H32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_MNOC]),
-		GET_L32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_MNOC]),
-		GET_H32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_LLCC]),
-		GET_L32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_LLCC]),
-		GET_H32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_EBI]),
-		GET_L32(perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_EBI]));
-	trace_sde_perf_calc_crtc(crtc->base.id,
-			perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_MNOC],
-			perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_LLCC],
-			perf->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_EBI],
-			perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_MNOC],
-			perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_LLCC],
-			perf->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_EBI],
-			perf->core_clk_rate);
 
 	SDE_DEBUG(
 		"crtc=%d clk_rate=%llu core_ib=%llu core_ab=%llu llcc_ib=%llu llcc_ab=%llu mem_ib=%llu mem_ab=%llu\n",
@@ -515,7 +491,6 @@ void sde_core_perf_crtc_release_bw(struct drm_crtc *crtc)
 
 	/* Release the bandwidth */
 	if (kms->perf.enable_bw_release) {
-		trace_sde_cmd_release_bw(crtc->base.id);
 		SDE_DEBUG("Release BW crtc=%d\n", crtc->base.id);
 		for (i = 0; i < SDE_POWER_HANDLE_DBUS_ID_MAX; i++) {
 			sde_crtc->cur_perf.bw_ctl[i] = 0;
@@ -672,15 +647,6 @@ void sde_core_perf_crtc_update(struct drm_crtc *crtc,
 		update_bus = ~0;
 		update_clk = 1;
 	}
-	trace_sde_perf_crtc_update(crtc->base.id,
-		new->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_MNOC],
-		new->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_MNOC],
-		new->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_LLCC],
-		new->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_LLCC],
-		new->bw_ctl[SDE_POWER_HANDLE_DBUS_ID_EBI],
-		new->max_per_pipe_ib[SDE_POWER_HANDLE_DBUS_ID_EBI],
-		new->core_clk_rate, stop_req,
-		update_bus, update_clk, params_changed);
 
 	for (i = 0; i < SDE_POWER_HANDLE_DBUS_ID_MAX; i++) {
 		if (update_bus & BIT(i))

@@ -16,7 +16,6 @@
 
 #include "sde_vbif.h"
 #include "sde_hw_vbif.h"
-#include "sde_trace.h"
 #include "sde_rotator_vbif.h"
 
 #define MAX_XIN_CLIENT	16
@@ -272,9 +271,6 @@ void sde_vbif_set_ot_limit(struct sde_kms *sde_kms,
 
 	if (ot_lim == 0)
 		goto exit;
-
-	trace_sde_perf_set_ot(params->num, params->xin_id, ot_lim,
-		params->vbif_idx);
 
 	forced_on = mdp->ops.setup_clk_force_ctrl(mdp, params->clk_ctrl, true);
 

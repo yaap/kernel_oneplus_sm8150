@@ -28,7 +28,6 @@
 #include <linux/sde_rsc.h>
 
 #include "sde_power_handle.h"
-#include "sde_trace.h"
 #include "sde_dbg.h"
 
 static const char *data_bus_name[SDE_POWER_HANDLE_DBUS_ID_MAX] = {
@@ -444,10 +443,8 @@ static int _sde_power_data_bus_set_quota(
 	pdbus->curr_bw_uc_idx = new_uc_idx;
 	pdbus->ao_bw_uc_idx = new_uc_idx;
 
-	SDE_ATRACE_BEGIN("msm_bus_scale_req");
 	rc = msm_bus_scale_client_update_request(pdbus->data_bus_hdl,
 			new_uc_idx);
-	SDE_ATRACE_END("msm_bus_scale_req");
 
 	return rc;
 }
@@ -474,7 +471,6 @@ int sde_power_data_bus_set_quota(struct sde_power_handle *phandle,
 
 	pclient->ab[bus_client] = ab_quota;
 	pclient->ib[bus_client] = ib_quota;
-	trace_sde_perf_update_bus(bus_client, bus_id, ab_quota, ib_quota);
 
 	list_for_each_entry(client, &phandle->power_client_clist, list) {
 		for (i = 0; i < SDE_POWER_HANDLE_DATA_BUS_CLIENT_MAX; i++) {
@@ -643,10 +639,8 @@ static int sde_power_reg_bus_update(u32 reg_bus_hdl, u32 usecase_ndx)
 	int rc = 0;
 
 	if (reg_bus_hdl) {
-		SDE_ATRACE_BEGIN("msm_bus_scale_req");
 		rc = msm_bus_scale_client_update_request(reg_bus_hdl,
 								usecase_ndx);
-		SDE_ATRACE_END("msm_bus_scale_req");
 	}
 
 	if (rc)
@@ -976,7 +970,6 @@ int sde_power_resource_enable(struct sde_power_handle *phandle,
 	if (!changed)
 		goto end;
 
-	SDE_ATRACE_BEGIN("sde_power_resource_enable");
 
 	/* RSC client init */
 	sde_power_rsc_client_init(phandle);
@@ -1047,7 +1040,6 @@ int sde_power_resource_enable(struct sde_power_handle *phandle,
 	}
 
 	SDE_EVT32_VERBOSE(enable, SDE_EVTLOG_FUNC_EXIT);
-	SDE_ATRACE_END("sde_power_resource_enable");
 	mutex_unlock(&phandle->phandle_lock);
 	return rc;
 
@@ -1062,7 +1054,6 @@ vreg_err:
 		sde_power_data_bus_update(&phandle->data_bus_handle[i], 0);
 data_bus_hdl_err:
 	phandle->current_usecase_ndx = prev_usecase_ndx;
-	SDE_ATRACE_END("sde_power_resource_enable");
 
 end:
 	mutex_unlock(&phandle->phandle_lock);

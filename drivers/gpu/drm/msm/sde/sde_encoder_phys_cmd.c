@@ -17,7 +17,6 @@
 #include "sde_hw_interrupts.h"
 #include "sde_core_irq.h"
 #include "sde_formats.h"
-#include "sde_trace.h"
 
 #define SDE_DEBUG_CMDENC(e, fmt, ...) SDE_DEBUG("enc%d intf%d " fmt, \
 		(e) && (e)->base.parent ? \
@@ -188,7 +187,6 @@ static void sde_encoder_phys_cmd_pp_tx_done_irq(void *arg, int irq_idx)
 	if (!phys_enc || !phys_enc->hw_pp)
 		return;
 
-	SDE_ATRACE_BEGIN("pp_done_irq");
 
 	/* notify all synchronous clients first, then asynchronous clients */
 	if (phys_enc->parent_ops.handle_frame_done &&
@@ -206,7 +204,6 @@ static void sde_encoder_phys_cmd_pp_tx_done_irq(void *arg, int irq_idx)
 
 	/* Signal any waiting atomic commit thread */
 	wake_up_all(&phys_enc->pending_kickoff_wq);
-	SDE_ATRACE_END("pp_done_irq");
 }
 
 static void sde_encoder_phys_cmd_autorefresh_done_irq(void *arg, int irq_idx)
@@ -242,7 +239,6 @@ static void sde_encoder_phys_cmd_te_rd_ptr_irq(void *arg, int irq_idx)
 	if (!phys_enc || !phys_enc->hw_pp || !phys_enc->hw_intf)
 		return;
 
-	SDE_ATRACE_BEGIN("rd_ptr_irq");
 	cmd_enc = to_sde_encoder_phys_cmd(phys_enc);
 
 	SDE_EVT32_IRQ(DRMID(phys_enc->parent),
@@ -256,7 +252,6 @@ static void sde_encoder_phys_cmd_te_rd_ptr_irq(void *arg, int irq_idx)
 
 	atomic_add_unless(&cmd_enc->pending_vblank_cnt, -1, 0);
 	wake_up_all(&cmd_enc->pending_vblank_wq);
-	SDE_ATRACE_END("rd_ptr_irq");
 }
 
 static void sde_encoder_phys_cmd_wr_ptr_irq(void *arg, int irq_idx)
@@ -268,7 +263,6 @@ static void sde_encoder_phys_cmd_wr_ptr_irq(void *arg, int irq_idx)
 	if (!phys_enc || !phys_enc->hw_ctl)
 		return;
 
-	SDE_ATRACE_BEGIN("wr_ptr_irq");
 
 	ctl = phys_enc->hw_ctl;
 
@@ -284,7 +278,6 @@ static void sde_encoder_phys_cmd_wr_ptr_irq(void *arg, int irq_idx)
 
 	/* Signal any waiting wr_ptr interrupt */
 	wake_up_all(&phys_enc->pending_kickoff_wq);
-	SDE_ATRACE_END("wr_ptr_irq");
 }
 
 static void sde_encoder_phys_cmd_underrun_irq(void *arg, int irq_idx)

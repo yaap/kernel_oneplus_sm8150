@@ -21,7 +21,6 @@
 #include <linux/slab.h>
 
 #include "sde_dbg.h"
-#include "sde_trace.h"
 
 #define SDE_EVTLOG_FILTER_STRSIZE	64
 
@@ -101,7 +100,6 @@ void sde_evtlog_log(struct sde_dbg_evtlog *evtlog, const char *name, int line,
 	evtlog->curr = (evtlog->curr + 1) % SDE_EVTLOG_ENTRY;
 	evtlog->last++;
 
-	trace_sde_evtlog(name, line, log->data_cnt, log->data);
 exit:
 	spin_unlock_irqrestore(&evtlog->spin_lock, flags);
 }

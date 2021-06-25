@@ -23,7 +23,6 @@
 #include "dsi_display.h"
 #include "sde_crtc.h"
 #include "sde_rm.h"
-#include "sde_trace.h"
 #define BL_NODE_NAME_SIZE 32
 
 /* Autorefresh will occur after FRAME_CNT frames. Large values are unlikely */
@@ -615,7 +614,6 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 		//struct drm_encoder *drm_enc = c_conn->encoder;
 		dsi_display->panel->is_hbm_enabled = fingerprint_mode;
 		if (fingerprint_mode) {
-			SDE_ATRACE_BEGIN("set_hbm_on");
 			HBM_flag=true;
 			mutex_lock(&dsi_display->panel->panel_lock);
 			if (dsi_display->panel->aod_status==1 && !finger_type) {
@@ -637,7 +635,6 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 				rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_ON_5);
 				pr_debug("Send DSI_CMD_SET_HBM_ON_5 cmds\n");
 			}
-			SDE_ATRACE_END("set_hbm_on");
 			mutex_unlock(&dsi_display->panel->panel_lock);
 			if (rc) {
 				pr_err("failed to send DSI_GAMMA_CMD_SET_HBM_ON cmds, rc=%d\n", rc);
@@ -645,7 +642,6 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 			}
 		}
 		else {
-			SDE_ATRACE_BEGIN("set_hbm_off");
 			HBM_flag = false;
 			//_sde_connector_update_bl_scale(c_conn);
 			mutex_lock(&dsi_display->panel->panel_lock);
@@ -691,7 +687,6 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 				rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_OFF);
 				pr_debug("Send DSI_CMD_SET_HBM_OFF cmds\n");
 			}
-			SDE_ATRACE_END("set_hbm_off");
 			mutex_unlock(&dsi_display->panel->panel_lock);
 			_sde_connector_update_bl_scale(c_conn);
 			if (rc) {
