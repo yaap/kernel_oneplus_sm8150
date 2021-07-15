@@ -27,6 +27,8 @@
 #include <linux/delay.h>
 #include <linux/oneplus/boot_mode.h>
 #include <linux/workqueue.h>
+#include <linux/pm_qos.h>
+#include <linux/i2c-qcom-geni.h>
 
 #include "util_interface/touch_interfaces.h"
 #include "tp_devices.h"
@@ -402,6 +404,9 @@ struct touchpanel_data {
 	struct touchpanel_operations *ts_ops;	/*call_back function */
 	struct proc_dir_entry *prEntry_tp;	/*struct proc_dir_entry of "/proc/touchpanel" */
 	struct register_info reg_info;	/*debug node for register length */
+
+	struct pm_qos_request pm_i2c_req;
+	struct pm_qos_request pm_touch_req;
 
 	void *chip_data;	/*Chip Related data */
 	void *private_data;	/*Reserved Private data */
