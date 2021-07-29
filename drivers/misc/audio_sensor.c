@@ -211,7 +211,7 @@ static long share_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;
 
 	default:
-		pr_info("%s: INVAILD cmd\n", __func__);
+		pr_debug("%s: INVAILD cmd\n", __func__);
 		break;
 	}
 
