@@ -902,7 +902,7 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 		op_dimlayer_bl_enable_real = op_dimlayer_bl_enabled;
 		if (op_dimlayer_bl_enable_real && bl_lvl != 0)
 			bl_lvl = op_dimlayer_bl_alpha;
-		pr_err("dc light %d %d\n", op_dimlayer_bl_enable_real, bl_lvl);
+		pr_debug("dc light %d %d\n", op_dimlayer_bl_enable_real, bl_lvl);
 	} else if (op_dimlayer_bl_enable_real && bl_lvl != 0) {
 		bl_lvl = op_dimlayer_bl_alpha;
 	}
@@ -5263,7 +5263,7 @@ int dsi_panel_disable(struct dsi_panel *panel)
 		pr_err("invalid params\n");
 		return -EINVAL;
 	}
-	pr_err("dsi_panel_disable aod_mode =%d\n",panel->aod_mode);
+	pr_debug("dsi_panel_disable aod_mode =%d\n",panel->aod_mode);
 	printk(KERN_ERR"dsi_panel_disable ++\n");
 	mutex_lock(&panel->panel_lock);
 
@@ -5812,12 +5812,12 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 		panel->aod_status == 1;
 		real_aod_mode = true;
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
-		pr_err("send AOD ON commd mode 1 start \n");
+		pr_debug("send AOD ON commd mode 1 start \n");
 		aod_complete = true;
-		pr_err("send AOD ON commd mode 1 end \n");
+		pr_debug("send AOD ON commd mode 1 end \n");
 		tp_aod_flag = 100;
 		notifier_data.data = &tp_aod_flag;
-		pr_err("set aod state TP flag: %d\n", tp_aod_flag);
+		pr_debug("set aod state TP flag: %d\n", tp_aod_flag);
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notifier_data);
 		aod_fod_flag = false;
 		mutex_unlock(&panel->panel_lock);
@@ -5825,17 +5825,17 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
         if (panel->aod_status == 0) {
 			panel->aod_status = 1;
 			real_aod_mode = false;
-			pr_err("send AOD ON commd mode 2 start \n");
+			pr_debug("send AOD ON commd mode 2 start \n");
             rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_2);
 			if (level == 2) {
 				tp_aod_flag=100;
 				notifier_data.data = &tp_aod_flag;
 				notifier_data.id = MSM_DRM_PRIMARY_DISPLAY;
-				pr_err("set aod state TP flag: %d\n", tp_aod_flag);
+				pr_debug("set aod state TP flag: %d\n", tp_aod_flag);
 				msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK,&notifier_data);
 				}
 			aod_fod_flag = false;
-			pr_err("send AOD ON commd mode 2 end   \n");
+			pr_debug("send AOD ON commd mode 2 end   \n");
 		}
 	} else if (level == 3) {
 		mutex_lock(&panel->panel_lock);
@@ -5843,11 +5843,11 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 		real_aod_mode = true;
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_3);
 		aod_complete = true;
-		pr_err("Send DSI_CMD_SET_AOD_ON_3 cmds\n");
+		pr_debug("Send DSI_CMD_SET_AOD_ON_3 cmds\n");
 
 		tp_aod_flag = 100;
 		notifier_data.data = &tp_aod_flag;
-		pr_err("set aod state TP flag: %d\n", tp_aod_flag);
+		pr_debug("set aod state TP flag: %d\n", tp_aod_flag);
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notifier_data);
 
 		aod_fod_flag = false;
@@ -5858,11 +5858,11 @@ int dsi_panel_set_aod_mode(struct dsi_panel *panel, int level)
 		real_aod_mode = true;
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
 		aod_complete = true;
-		pr_err("Send DSI_CMD_SET_AOD_ON_5 cmds\n");
+		pr_debug("Send DSI_CMD_SET_AOD_ON_5 cmds\n");
 
 		tp_aod_flag = 100;
 		notifier_data.data = &tp_aod_flag;
-		pr_err("set aod state TP flag: %d\n", tp_aod_flag);
+		pr_debug("set aod state TP flag: %d\n", tp_aod_flag);
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &notifier_data);
 
 		aod_fod_flag = false;
