@@ -603,25 +603,25 @@
 			qcom,gpu-pwrlevel@3 {
 				reg = <3>;
 				qcom,gpu-freq = <427000000>;
-				qcom,bus-freq = <7>;
-				qcom,bus-min = <6>;
-				qcom,bus-max = <10>;
+				qcom,bus-freq = <6>;
+				qcom,bus-min = <5>;
+				qcom,bus-max = <9>;
 			};
 
 			qcom,gpu-pwrlevel@4 {
 				reg = <4>;
 				qcom,gpu-freq = <345000000>;
-				qcom,bus-freq = <5>;
+				qcom,bus-freq = <4>;
 				qcom,bus-min = <3>;
-				qcom,bus-max = <7>;
+				qcom,bus-max = <5>;
 			};
 
 			qcom,gpu-pwrlevel@5 {
 				reg = <5>;
 				qcom,gpu-freq = <257000000>;
-				qcom,bus-freq = <4>;
+				qcom,bus-freq = <3>;
 				qcom,bus-min = <2>;
-				qcom,bus-max = <5>;
+				qcom,bus-max = <4>;
 			};
 
 			qcom,gpu-pwrlevel@6 {
@@ -666,25 +666,25 @@
 			qcom,gpu-pwrlevel@3 {
 				reg = <3>;
 				qcom,gpu-freq = <427000000>;
-				qcom,bus-freq = <7>;
-				qcom,bus-min = <6>;
-				qcom,bus-max = <10>;
+				qcom,bus-freq = <6>;
+				qcom,bus-min = <5>;
+				qcom,bus-max = <9>;
 			};
 
 			qcom,gpu-pwrlevel@4 {
 				reg = <4>;
 				qcom,gpu-freq = <345000000>;
-				qcom,bus-freq = <5>;
+				qcom,bus-freq = <4>;
 				qcom,bus-min = <3>;
-				qcom,bus-max = <7>;
+				qcom,bus-max = <5>;
 			};
 
 			qcom,gpu-pwrlevel@5 {
 				reg = <5>;
 				qcom,gpu-freq = <257000000>;
-				qcom,bus-freq = <4>;
+				qcom,bus-freq = <3>;
 				qcom,bus-min = <2>;
-				qcom,bus-max = <5>;
+				qcom,bus-max = <4>;
 			};
 
 			qcom,gpu-pwrlevel@6 {
