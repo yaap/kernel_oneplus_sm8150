@@ -1640,6 +1640,7 @@ struct f2fs_sb_info {
 	struct inode *meta_inode;		/* cache meta blocks */
 	struct f2fs_rwsem cp_global_sem;	/* checkpoint procedure lock */
 	struct f2fs_rwsem cp_rwsem;		/* blocking FS operations */
+	struct f2fs_rwsem cp_quota_rwsem;    	/* blocking quota sync operations */
 	struct f2fs_rwsem node_write;		/* locking node writes */
 	struct f2fs_rwsem node_change;	/* locking node change */
 	wait_queue_head_t cp_wait;
@@ -2224,12 +2225,14 @@ static inline void f2fs_unlock_op(struct f2fs_sb_info *sbi)
 
 static inline void f2fs_lock_all(struct f2fs_sb_info *sbi)
 {
+	f2fs_down_write(&sbi->cp_quota_rwsem);
 	f2fs_down_write(&sbi->cp_rwsem);
 }
 
 static inline void f2fs_unlock_all(struct f2fs_sb_info *sbi)
 {
 	f2fs_up_write(&sbi->cp_rwsem);
+	f2fs_up_write(&sbi->cp_quota_rwsem);
 }
 
 static inline int __get_cp_reason(struct f2fs_sb_info *sbi)

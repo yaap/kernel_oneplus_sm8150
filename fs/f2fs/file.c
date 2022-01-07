@@ -4517,15 +4517,12 @@ skip_write_trace:
 	}
 
 	/* Don't leave any preallocated blocks around past i_size. */
-	if (preallocated && i_size_read(inode) < target_size) {
+	if (preallocated > 0 && i_size_read(inode) < target_size) {
 		f2fs_down_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
 		f2fs_down_write(&F2FS_I(inode)->i_mmap_sem);
-		if (!f2fs_truncate(inode))
-			file_dont_truncate(inode);
+		f2fs_truncate(inode);
 		f2fs_up_write(&F2FS_I(inode)->i_mmap_sem);
 		f2fs_up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
-	} else {
-		file_dont_truncate(inode);
 	}
 
 	clear_inode_flag(inode, FI_PREALLOCATED_ALL);
