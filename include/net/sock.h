@@ -185,6 +185,7 @@ struct sock_common {
 	struct proto		*skc_prot;
 	possible_net_t		skc_net;
 
+	u32 skc_op_mark;
 #if IS_ENABLED(CONFIG_IPV6)
 	struct in6_addr		skc_v6_daddr;
 	struct in6_addr		skc_v6_rcv_saddr;
@@ -351,6 +352,7 @@ struct sock {
 #define sk_incoming_cpu		__sk_common.skc_incoming_cpu
 #define sk_flags		__sk_common.skc_flags
 #define sk_rxhash		__sk_common.skc_rxhash
+#define op_sla_mark		__sk_common.skc_op_mark
 
 	socket_lock_t		sk_lock;
 	atomic_t		sk_drops;
@@ -2459,5 +2461,8 @@ static inline void sk_pacing_shift_update(struct sock *sk, int val)
 
 int sockev_register_notify(struct notifier_block *nb);
 int sockev_unregister_notify(struct notifier_block *nb);
+
+/* On 32bit arches, an skb frag is limited to 2^15 */
+#define SKB_FRAG_PAGE_ORDER	get_order(32768)
 
 #endif	/* _SOCK_H */
