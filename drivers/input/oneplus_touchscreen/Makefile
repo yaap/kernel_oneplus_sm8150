@@ -1,6 +1,8 @@
 #
 # Makefile for the touchscreen drivers.
 #
+ccflags-y += -mllvm -inline-threshold=15000
+ccflags-y += -mllvm -inlinehint-threshold=10000
 subdir-ccflags-$(CONFIG_TOUCHPANEL_MTK_PLATFORM) += -I$(srctree)/drivers/misc/mediatek/include/
 subdir-ccflags-y += -Wunused-variable 
 ifneq ($(cc-name),clang)
