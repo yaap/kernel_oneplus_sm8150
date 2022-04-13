@@ -470,9 +470,6 @@ int dsi_panel_set_customer_p3_mode(struct dsi_panel *panel, int level);
 u8 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel);
 u8 dsi_panel_get_dc_dim_alpha(struct dsi_panel *panel);
 
-void dsi_panel_calc_dsi_transfer_time(struct dsi_host_common_cfg *config,
-		struct dsi_mode_info *timing);
-
 int dsi_panel_set_fod_hbm(struct dsi_panel *panel, bool status);
 bool dsi_panel_get_fod_ui(struct dsi_panel *panel);
 void dsi_panel_set_fod_ui(struct dsi_panel *panel, bool status);
@@ -484,6 +481,4 @@ __maybe_unused static u32 interpolate(uint32_t x, uint32_t xa, uint32_t xb,
 {
 	return ya - (ya - yb) * (x - xa) / (xb - xa);
 }
-
-
 #endif /* _DSI_PANEL_H_ */
