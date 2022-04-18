@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # HOME path
-export HOME=/home/harish/neptune
+export HOME=/home2/harish/neptune
 
 # Compiler environment
 export CLANG_PATH=$HOME/rui-clang/bin
