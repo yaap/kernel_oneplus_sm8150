@@ -5568,8 +5568,10 @@ int sde_encoder_wait_for_event(struct drm_encoder *drm_enc,
 		};
 
 		if (phys && fn_wait) {
+#ifdef CONFIG_TRACEPOINTS
 			snprintf(atrace_buf, sizeof(atrace_buf),
 				"wait_completion_event_%d", event);
+#endif
 			ret = fn_wait(phys);
 			if (ret)
 				return ret;
