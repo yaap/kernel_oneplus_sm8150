@@ -4,7 +4,7 @@
 KNAME="NeptuneKernel"
 MIN_HEAD=$(git rev-parse HEAD)
 VERSION="$(cat version)-$(date +%m.%d.%y)-$(echo ${MIN_HEAD:0:8})"
-ZIPNAME="${KNAME}-$(cat version)-$(echo $(date +%m.%d.%y))"
+ZIPNAME="${KNAME}-$(cat version)-$(echo $(date +%d.%m.%Y-%H%M))"
 
 export LOCALVERSION="-${KNAME}-$(echo "${VERSION}")"
 
