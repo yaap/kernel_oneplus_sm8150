@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # HOME path
-export HOME=/home/harish/neptune
+export HOME=/home3/harish/neptune
 
 # Compiler environment
 export CLANG_PATH=$HOME/dora-clang/bin
