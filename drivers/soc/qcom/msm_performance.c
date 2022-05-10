@@ -1,14 +1,6 @@
+// SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2014-2018, The Linux Foundation. All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
  */
 
 #include <linux/init.h>
@@ -32,14 +24,22 @@
  * will collect the data for 15 windows(300ms) and then update
  * sysfs nodes with aggregated data
  */
-#define POLL_INT 15
+#define POLL_INT 25
+#define NODE_NAME_MAX_CHARS 16
+
+enum cpu_clusters {
+	MIN = 0,
+	MID = 1,
+	MAX = 2,
+	CLUSTER_MAX
+};
 
 /* To handle cpufreq min/max request */
 struct cpu_status {
 	unsigned int min;
 	unsigned int max;
 };
-static DEFINE_PER_CPU(struct cpu_status, cpu_stats);
+static DEFINE_PER_CPU(struct cpu_status, msm_perf_cpu_stats);
 
 struct events {
 	spinlock_t cpu_hotplug_lock;
@@ -51,6 +51,8 @@ static struct task_struct *events_notify_thread;
 
 static unsigned int aggr_big_nr;
 static unsigned int aggr_top_load;
+static unsigned int top_load[CLUSTER_MAX];
+static unsigned int curr_cap[CLUSTER_MAX];
 
 /*******************************sysfs start************************************/
 static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
@@ -77,7 +79,7 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 		if (cpu > (num_present_cpus() - 1))
 			return -EINVAL;
 
-		i_cpu_stats = &per_cpu(cpu_stats, cpu);
+		i_cpu_stats = &per_cpu(msm_perf_cpu_stats, cpu);
 
 		i_cpu_stats->min = val;
 		cpumask_set_cpu(cpu, limit_mask);
@@ -95,7 +97,7 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	 */
 	get_online_cpus();
 	for_each_cpu(i, limit_mask) {
-		i_cpu_stats = &per_cpu(cpu_stats, i);
+		i_cpu_stats = &per_cpu(msm_perf_cpu_stats, i);
 
 		if (cpufreq_get_policy(&policy, i))
 			continue;
@@ -117,7 +119,8 @@ static int get_cpu_min_freq(char *buf, const struct kernel_param *kp)
 
 	for_each_present_cpu(cpu) {
 		cnt += snprintf(buf + cnt, PAGE_SIZE - cnt,
-				"%d:%u ", cpu, per_cpu(cpu_stats, cpu).min);
+				"%d:%u ", cpu,
+				per_cpu(msm_perf_cpu_stats, cpu).min);
 	}
 	cnt += snprintf(buf + cnt, PAGE_SIZE - cnt, "\n");
 	return cnt;
@@ -153,7 +156,7 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 		if (cpu > (num_present_cpus() - 1))
 			return -EINVAL;
 
-		i_cpu_stats = &per_cpu(cpu_stats, cpu);
+		i_cpu_stats = &per_cpu(msm_perf_cpu_stats, cpu);
 
 		i_cpu_stats->max = val;
 		cpumask_set_cpu(cpu, limit_mask);
@@ -164,7 +167,7 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 
 	get_online_cpus();
 	for_each_cpu(i, limit_mask) {
-		i_cpu_stats = &per_cpu(cpu_stats, i);
+		i_cpu_stats = &per_cpu(msm_perf_cpu_stats, i);
 		if (cpufreq_get_policy(&policy, i))
 			continue;
 
@@ -185,7 +188,8 @@ static int get_cpu_max_freq(char *buf, const struct kernel_param *kp)
 
 	for_each_present_cpu(cpu) {
 		cnt += snprintf(buf + cnt, PAGE_SIZE - cnt,
-				"%d:%u ", cpu, per_cpu(cpu_stats, cpu).max);
+				"%d:%u ", cpu,
+				per_cpu(msm_perf_cpu_stats, cpu).max);
 	}
 	cnt += snprintf(buf + cnt, PAGE_SIZE - cnt, "\n");
 	return cnt;
@@ -217,7 +221,8 @@ static struct attribute_group events_attr_group = {
 };
 
 static ssize_t show_big_nr(struct kobject *kobj,
-	struct kobj_attribute *attr, char *buf)
+			   struct kobj_attribute *attr,
+			   char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%u\n", aggr_big_nr);
 }
@@ -226,7 +231,8 @@ static struct kobj_attribute big_nr_attr =
 __ATTR(aggr_big_nr, 0444, show_big_nr, NULL);
 
 static ssize_t show_top_load(struct kobject *kobj,
-	struct kobj_attribute *attr, char *buf)
+				 struct kobj_attribute *attr,
+				 char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%u\n", aggr_top_load);
 }
@@ -235,9 +241,35 @@ static struct kobj_attribute top_load_attr =
 __ATTR(aggr_top_load, 0444, show_top_load, NULL);
 
 
+static ssize_t show_top_load_cluster(struct kobject *kobj,
+				 struct kobj_attribute *attr,
+				 char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%u %u %u\n",
+					top_load[MIN], top_load[MID],
+					top_load[MAX]);
+}
+
+static struct kobj_attribute cluster_top_load_attr =
+__ATTR(top_load_cluster, 0444, show_top_load_cluster, NULL);
+
+static ssize_t show_curr_cap_cluster(struct kobject *kobj,
+				 struct kobj_attribute *attr,
+				 char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%u %u %u\n",
+					curr_cap[MIN], curr_cap[MID],
+					curr_cap[MAX]);
+}
+
+static struct kobj_attribute cluster_curr_cap_attr =
+__ATTR(curr_cap_cluster, 0444, show_curr_cap_cluster, NULL);
+
 static struct attribute *notify_attrs[] = {
 	&big_nr_attr.attr,
 	&top_load_attr.attr,
+	&cluster_top_load_attr.attr,
+	&cluster_curr_cap_attr.attr,
 	NULL,
 };
 
@@ -253,7 +285,7 @@ static int perf_adjust_notify(struct notifier_block *nb, unsigned long val,
 {
 	struct cpufreq_policy *policy = data;
 	unsigned int cpu = policy->cpu;
-	struct cpu_status *cpu_st = &per_cpu(cpu_stats, cpu);
+	struct cpu_status *cpu_st = &per_cpu(msm_perf_cpu_stats, cpu);
 	unsigned int min = cpu_st->min, max = cpu_st->max;
 
 
@@ -387,23 +419,37 @@ static void nr_notify_userspace(struct work_struct *work)
 {
 	sysfs_notify(notify_kobj, NULL, "aggr_top_load");
 	sysfs_notify(notify_kobj, NULL, "aggr_big_nr");
+	sysfs_notify(notify_kobj, NULL, "top_load_cluster");
+	sysfs_notify(notify_kobj, NULL, "curr_cap_cluster");
 }
 
 static int msm_perf_core_ctl_notify(struct notifier_block *nb,
-				    unsigned long unused,
-				    void *data)
+					unsigned long unused,
+					void *data)
 {
 	static unsigned int tld, nrb, i;
+	static unsigned int top_ld[CLUSTER_MAX], curr_cp[CLUSTER_MAX];
 	static DECLARE_WORK(sysfs_notify_work, nr_notify_userspace);
 	struct core_ctl_notif_data *d = data;
-
+	int cluster = 0;
 
 	nrb += d->nr_big;
 	tld += d->coloc_load_pct;
+	for (cluster = 0; cluster < CLUSTER_MAX; cluster++) {
+		top_ld[cluster] += d->ta_util_pct[cluster];
+		curr_cp[cluster] += d->cur_cap_pct[cluster];
+	}
 	i++;
 	if (i == POLL_INT) {
 		aggr_big_nr = ((nrb%POLL_INT) ? 1 : 0) + nrb/POLL_INT;
 		aggr_top_load = tld/POLL_INT;
+		for (cluster = 0; cluster < CLUSTER_MAX; cluster++) {
+			top_load[cluster] = top_ld[cluster]/POLL_INT;
+			curr_cap[cluster] = curr_cp[cluster]/POLL_INT;
+			top_ld[cluster] = 0;
+			curr_cp[cluster] = 0;
+		}
+		//reset Counters
 		tld = 0;
 		nrb = 0;
 		i = 0;
@@ -452,7 +498,7 @@ static int __init msm_performance_init(void)
 	cpufreq_register_notifier(&perf_cpufreq_nb, CPUFREQ_POLICY_NOTIFIER);
 
 	for_each_present_cpu(cpu)
-		per_cpu(cpu_stats, cpu).max = UINT_MAX;
+		per_cpu(msm_perf_cpu_stats, cpu).max = UINT_MAX;
 
 	rc = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE,
 		"msm_performance_cpu_hotplug",
