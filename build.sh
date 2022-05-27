@@ -4,7 +4,7 @@
 export HOME=/home2/harish/neptune
 
 # Compiler environment
-export CLANG_PATH=$HOME/dora-clang/bin
+export CLANG_PATH=$HOME/rui-clang/bin
 export PATH="$CLANG_PATH:$PATH"
 export CROSS_COMPILE=aarch64-linux-gnu-
 export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
