@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=NeptuneKernel by Vwool0xE9
+kernel.string=NeptuneKernel by Codecity001|H A R I S H
 do.devicecheck=1
 do.modules=0
 do.systemless=1
