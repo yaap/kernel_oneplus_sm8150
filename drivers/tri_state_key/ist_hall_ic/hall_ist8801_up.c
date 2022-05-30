@@ -1055,7 +1055,7 @@ static int ist8801_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	err = ist8801_setup_eint(p_data);
 
 	oneplus_register_hall("hall_up",&ist8801_up_ops);
-	
+
 	ist8801_set_sensitivity("40mT");
 
 	TRI_KEY_LOG("success. \n");
