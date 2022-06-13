@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Kernel version configuration
-KNAME="NeptuneKernel"
+KNAME="NeptunePlayground"
 MIN_HEAD=$(git rev-parse HEAD)
-VERSION="$(cat version)-$(date +%m.%d.%y)-$(echo ${MIN_HEAD:0:8})"
+VERSION="$(cat version)-$(date +%m.%d.%y-%H%M)"
 ZIPNAME="${KNAME}-$(cat version)-$(echo $(date +%d.%m.%Y-%H%M))"
 
 export LOCALVERSION="-${KNAME}-$(echo "${VERSION}")"
