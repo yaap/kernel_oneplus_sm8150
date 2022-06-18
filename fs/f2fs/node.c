@@ -1414,7 +1414,6 @@ repeat:
 
 	err = read_node_page(page, 0);
 	if (err < 0) {
-		f2fs_handle_page_eio(sbi, page->index, NODE);
 		f2fs_put_page(page, 1);
 		return ERR_PTR(err);
 	} else if (err == LOCKED_PAGE) {
@@ -1451,7 +1450,6 @@ page_hit:
 		err = -EINVAL;
 out_err:
 		ClearPageUptodate(page);
-		f2fs_handle_page_eio(sbi, page->index, NODE);
 		f2fs_put_page(page, 1);
 		return ERR_PTR(err);
 	}
