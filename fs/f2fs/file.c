@@ -4489,7 +4489,7 @@ static ssize_t f2fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	/* Possibly preallocate the blocks for the write. */
 	target_size = iocb->ki_pos + iov_iter_count(from);
 	preallocated = f2fs_preallocate_blocks(iocb, from);
-	if (preallocated < 0)
+	if (preallocated < 0) {
 		ret = preallocated;
 	} else {
 		if (trace_f2fs_datawrite_start_enabled()) {
