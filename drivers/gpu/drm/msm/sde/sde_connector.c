@@ -584,7 +584,7 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 	if (!finger_type) {
 		if (dsi_display->panel->aod_status == 1) {
 			if (real_aod_mode && !aod_complete) {
-				pr_err("aod not complete\n");
+				pr_debug("aod not complete\n");
 				return 0;
 			}
 			if (!(sde_crtc_get_fingerprint_mode(c_conn->encoder->crtc->state)))
@@ -628,7 +628,7 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 			}
 			else if (dsi_display->panel->aod_status == 1 && finger_type) {
 				rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_AOD_OFF_NEW);
-				pr_err("qdt aod off\n");
+				pr_debug("qdt aod off\n");
 			}
 			else {
 				//sde_encoder_poll_line_counts(drm_enc);
@@ -637,7 +637,7 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 			}
 			mutex_unlock(&dsi_display->panel->panel_lock);
 			if (rc) {
-				pr_err("failed to send DSI_GAMMA_CMD_SET_HBM_ON cmds, rc=%d\n", rc);
+				pr_debug("failed to send DSI_GAMMA_CMD_SET_HBM_ON cmds, rc=%d\n", rc);
 				return rc;
 			}
 		}
@@ -675,10 +675,10 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 			}
 			else if (dsi_display->panel->aod_status == 1 && finger_type) {
 				if(oneplus_dim_status == 5) {
-					pr_err("qdt aod off dim 5\n");
+					pr_debug("qdt aod off dim 5\n");
 				} else {
 					rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_AOD_ON_2);
-					pr_err("qdt aod on dim 0\n");
+					pr_debug("qdt aod on dim 0\n");
 				}
 			}
 			else {
@@ -690,7 +690,7 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 			mutex_unlock(&dsi_display->panel->panel_lock);
 			_sde_connector_update_bl_scale(c_conn);
 			if (rc) {
-				pr_err("failed to send DSI_CMD_HBM_OFF cmds, rc=%d\n", rc);
+				pr_debug("failed to send DSI_CMD_HBM_OFF cmds, rc=%d\n", rc);
 				return rc;
 			}
 		}
