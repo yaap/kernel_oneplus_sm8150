@@ -1344,7 +1344,6 @@ static ssize_t fuse_dev_do_read(struct fuse_dev *fud, struct file *file,
 	clear_bit(FR_LOCKED, &req->flags);
 	if (!fpq->connected) {
 		err = (fc->aborted && fc->abort_err) ? -ECONNABORTED : -ENODEV;
-		req->out.h.error = err;
 		goto out_end;
 	}
 	if (err) {
