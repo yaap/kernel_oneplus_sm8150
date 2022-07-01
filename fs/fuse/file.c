@@ -206,9 +206,6 @@ int fuse_open_common(struct inode *inode, struct file *file, bool isdir)
 			  fc->atomic_o_trunc &&
 			  fc->writeback_cache;
 
-	if (fuse_is_bad(inode))
-		return -EIO;
-
 	err = generic_file_open(inode, file);
 	if (err)
 		return err;
@@ -412,7 +409,7 @@ static int fuse_flush(struct file *file, fl_owner_t id)
 	struct fuse_flush_in inarg;
 	int err;
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	if (fc->no_flush)
@@ -460,7 +457,7 @@ int fuse_fsync_common(struct file *file, loff_t start, loff_t end,
 	struct fuse_fsync_in inarg;
 	int err;
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	inode_lock(inode);
@@ -775,7 +772,7 @@ static int fuse_readpage(struct file *file, struct page *page)
 	int err;
 
 	err = -EIO;
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		goto out;
 
 	err = fuse_do_readpage(file, page);
@@ -902,7 +899,7 @@ static int fuse_readpages(struct file *file, struct address_space *mapping,
 	int nr_alloc = min_t(unsigned, nr_pages, FUSE_MAX_PAGES_PER_REQ);
 
 	err = -EIO;
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		goto out;
 
 	data.file = file;
@@ -932,9 +929,6 @@ static ssize_t fuse_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
 	struct inode *inode = iocb->ki_filp->f_mapping->host;
 	struct fuse_conn *fc = get_fuse_conn(inode);
 	struct fuse_file *ff = iocb->ki_filp->private_data;
-
-	if (fuse_is_bad(inode))
-		return -EIO;
 
 	/*
 	 * In auto invalidate mode, always update attributes on read.
@@ -1138,7 +1132,7 @@ static ssize_t fuse_perform_write(struct kiocb *iocb,
 	int err = 0;
 	ssize_t res = 0;
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	if (inode->i_size < pos + iov_iter_count(ii))
@@ -1198,9 +1192,6 @@ static ssize_t fuse_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 
 	if (ff->passthrough.filp)
 		return fuse_passthrough_write_iter(iocb, from);
-
-	if (fuse_is_bad(inode))
-		return -EIO;
 
 	if (get_fuse_conn(inode)->writeback_cache) {
 		/* Update size (EOF optimization) and mode (SUID clearing) */
@@ -1334,7 +1325,6 @@ static int fuse_get_user_pages(struct fuse_req *req, struct iov_iter *ii,
 			(PAGE_SIZE - ret) & (PAGE_SIZE - 1);
 	}
 
-	req->user_pages = true;
 	if (write)
 		req->in.argpages = 1;
 	else
@@ -1439,7 +1429,7 @@ static ssize_t __fuse_direct_read(struct fuse_io_priv *io,
 	ssize_t res;
 	struct inode *inode = file_inode(io->iocb->ki_filp);
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	res = fuse_direct_io(io, iter, ppos, 0);
@@ -1500,7 +1490,7 @@ static ssize_t fuse_direct_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	else
             inode_lock_shared(inode);
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	res = generic_write_checks(iocb, from);
@@ -1976,7 +1966,7 @@ static int fuse_writepages(struct address_space *mapping,
 	int err;
 
 	err = -EIO;
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		goto out;
 
 	data.inode = inode;
@@ -2766,7 +2756,7 @@ long fuse_ioctl_common(struct file *file, unsigned int cmd,
 	if (!fuse_allow_current_process(fc))
 		return -EACCES;
 
-	if (fuse_is_bad(inode))
+	if (is_bad_inode(inode))
 		return -EIO;
 
 	return fuse_do_ioctl(file, cmd, arg, flags);
