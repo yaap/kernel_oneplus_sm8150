@@ -8,3 +8,5 @@ obj-$(CONFIG_HAVE_CLK)	+= clock_ops.o
 obj-$(CONFIG_BOEFFLA_WL_BLOCKER)	+= boeffla_wl_blocker.o
 
 ccflags-$(CONFIG_DEBUG_DRIVER) := -DDEBUG
+
+subdir-ccflags-y := $(call cc-disable-warning, int-conversion)
