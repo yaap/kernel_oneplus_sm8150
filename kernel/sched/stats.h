@@ -69,9 +69,6 @@ static inline void psi_enqueue(struct task_struct *p, bool wakeup)
 	if (static_branch_likely(&psi_disabled))
 		return;
 
-	if (p->in_memstall)
-		set |= TSK_MEMSTALL_RUNNING;
-
 	if (!wakeup || p->sched_psi_wake_requeue) {
 		if (p->in_memstall)
 			set |= TSK_MEMSTALL;
@@ -87,24 +84,20 @@ static inline void psi_enqueue(struct task_struct *p, bool wakeup)
 
 static inline void psi_dequeue(struct task_struct *p, bool sleep)
 {
-	int clear = TSK_RUNNING;
+	int clear = TSK_RUNNING, set = 0;
 
 	if (static_branch_likely(&psi_disabled))
 		return;
 
-	/*
-	 * A voluntary sleep is a dequeue followed by a task switch. To
-	 * avoid walking all ancestors twice, psi_task_switch() handles
-	 * TSK_RUNNING and TSK_IOWAIT for us when it moves TSK_ONCPU.
-	 * Do nothing here.
-	 */
-	if (sleep)
-		return;
+	if (!sleep) {
+		if (p->in_memstall)
+			clear |= TSK_MEMSTALL;
+	} else {
+		if (p->in_iowait)
+			set |= TSK_IOWAIT;
+	}
 
-	if (p->in_memstall)
-		clear |= (TSK_MEMSTALL | TSK_MEMSTALL_RUNNING);
-
-	psi_task_change(p, clear, 0);
+	psi_task_change(p, clear, set);
 }
 
 static inline void psi_ttwu_dequeue(struct task_struct *p)
@@ -133,23 +126,19 @@ static inline void psi_ttwu_dequeue(struct task_struct *p)
 	}
 }
 
-static inline void psi_sched_switch(struct task_struct *prev,
-				    struct task_struct *next,
-				    bool sleep)
+static inline void psi_task_tick(struct rq *rq)
 {
 	if (static_branch_likely(&psi_disabled))
 		return;
 
-	psi_task_switch(prev, next, sleep);
+	if (unlikely(rq->curr->in_memstall))
+		psi_memstall_tick(rq->curr, cpu_of(rq));
 }
-
 #else /* CONFIG_PSI */
 static inline void psi_enqueue(struct task_struct *p, bool wakeup) {}
 static inline void psi_dequeue(struct task_struct *p, bool sleep) {}
 static inline void psi_ttwu_dequeue(struct task_struct *p) {}
-static inline void psi_sched_switch(struct task_struct *prev,
-				    struct task_struct *next,
-				    bool sleep) {}
+static inline void psi_task_tick(struct rq *rq) {}
 #endif /* CONFIG_PSI */
 
 #ifdef CONFIG_SCHED_INFO
