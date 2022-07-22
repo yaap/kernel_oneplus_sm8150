@@ -48,6 +48,11 @@
 #include "op_charge.h"
 #include <linux/oneplus/boot_mode.h>
 
+
+#ifdef CONFIG_OP_PASSTHROUGH_HACK
+#include <linux/passthroughhack.h>
+#endif
+
 #define SOC_INVALID                   0x7E
 #define SOC_DATA_REG_0                0x88D
 #define SOC_FLAG_REG                  0x88E
@@ -8000,6 +8005,9 @@ static void set_usb_switch(struct smb_charger *chg, bool enable)
 		pr_debug("no fast_charger register found\n");
 		return;
 	}
+
+	if (passthrough_hack > 0)
+		return;
 
 	if (enable) {
 		pr_debug("switch on fastchg\n");
