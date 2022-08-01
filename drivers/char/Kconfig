@@ -690,19 +690,19 @@ config VSERVICES_VTTY_COUNT
 	  This limit applies to both the client and server.
 
 config RANDOM_TRUST_CPU
-        bool "Initialize RNG using CPU RNG instructions"
-        default y
-        depends on ARCH_RANDOM
-        help
-          Initialize the RNG using random numbers supplied by the CPU's
-          RNG instructions (e.g. RDRAND), if supported and available. These
-          random numbers are never used directly, but are rather hashed into
-          the main input pool, and this happens regardless of whether or not
-          this option is enabled. Instead, this option controls whether the
-          they are credited and hence can initialize the RNG. Additionally,
-          other sources of randomness are always used, regardless of this
-          setting.  Enabling this implies trusting that the CPU can supply high
-          quality and non-backdoored random numbers.
+	bool "Initialize RNG using CPU RNG instructions"
+	default y
+	depends on ARCH_RANDOM
+	help
+	  Initialize the RNG using random numbers supplied by the CPU's
+	  RNG instructions (e.g. RDRAND), if supported and available. These
+	  random numbers are never used directly, but are rather hashed into
+	  the main input pool, and this happens regardless of whether or not
+	  this option is enabled. Instead, this option controls whether the
+	  they are credited and hence can initialize the RNG. Additionally,
+	  other sources of randomness are always used, regardless of this
+	  setting.  Enabling this implies trusting that the CPU can supply high
+	  quality and non-backdoored random numbers.
 
 	  Say Y here unless you have reason to mistrust your CPU or believe
 	  its RNG facilities may be faulty. This may also be configured at
