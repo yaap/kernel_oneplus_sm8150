@@ -4365,7 +4365,6 @@ int smblib_get_prop_connector_health(struct smb_charger *chg)
 	return POWER_SUPPLY_HEALTH_COOL;
 }
 
-#define PD_PANELON_CURRENT_UA		2000000
 #define PD_PANELOFF_CURRENT_UA		3000000
 #define DCP_PANELOFF_CURRENT_UA		1800000
 static int get_rp_based_dcp_current(struct smb_charger *chg, int typec_mode)
@@ -4374,19 +4373,12 @@ static int get_rp_based_dcp_current(struct smb_charger *chg, int typec_mode)
 
 	switch (typec_mode) {
 	case POWER_SUPPLY_TYPEC_SOURCE_HIGH:
-		if (chg->oem_lcd_is_on)
-			rp_ua = PD_PANELON_CURRENT_UA;
-		else
-			rp_ua = TYPEC_HIGH_CURRENT_UA;
-		break;
+		rp_ua = TYPEC_HIGH_CURRENT_UA;
 	case POWER_SUPPLY_TYPEC_SOURCE_MEDIUM:
 	case POWER_SUPPLY_TYPEC_SOURCE_DEFAULT:
 	/* fall through */
 	default:
-		if (chg->oem_lcd_is_on)
-			rp_ua = DCP_CURRENT_UA;
-		else
-			rp_ua = chg->disable_ctrl_current > 0 ? DCP_CURRENT_UA : DCP_PANELOFF_CURRENT_UA;
+		rp_ua = chg->disable_ctrl_current > 0 ? DCP_CURRENT_UA : DCP_PANELOFF_CURRENT_UA;
 	}
 
 	return rp_ua;
@@ -4409,10 +4401,6 @@ int smblib_set_prop_pd_current_max(struct smb_charger *chg,
 	} else {
 		rc = -EPERM;
 	}
-	if (chg->oem_lcd_is_on)
-		rc = vote(chg->usb_icl_votable,
-			SW_ICL_MAX_VOTER, true, PD_PANELON_CURRENT_UA);
-
 	return rc;
 }
 
@@ -8898,7 +8886,6 @@ void op_charge_info_init(struct smb_charger *chg)
 	chg->recharge_pending = false;
 	chg->recharge_status = false;
 	chg->temp_littel_cool_set_current_0_point_25c = false;
-	chg->oem_lcd_is_on = false;
 	chg->time_out = false;
 	chg->battery_status = BATT_STATUS_GOOD;
 	chg->disable_normal_chg_for_dash = false;
@@ -9075,28 +9062,15 @@ static void op_dcdc_vph_track_sel(struct smb_charger *chg)
 {
 	int rc = 0;
 
-	pr_debug("lcd_is_on:%d\n", chg->oem_lcd_is_on);
-
 	if (chg->vbus_present && chg->chg_done && !chg->vph_sel_disable) {
-		if (chg->oem_lcd_is_on && !chg->vph_set_flag) {
-			pr_debug("vbus present,LCD on set dcdc vph 300mv\n");
-			/* config the DCDC_VPH_TRACK_SEL 300mv */
-			rc = smblib_masked_write(chg, DCDC_VPH_TRACK_SEL,
-					VPH_TRACK_SEL_MASK, SEL_300MV);
-			if (rc < 0)
-				pr_debug("Couldn't set  DCDC_VPH_TRACK_SEL rc=%d\n",
-						rc);
-			chg->vph_set_flag = true;
-		} else if (!chg->oem_lcd_is_on && chg->vph_set_flag) {
-			pr_debug("vbus present,LCD off set dcdc vph 100mv\n");
-			/* config the DCDC_VPH_TRACK_SEL 100mv */
-			rc = smblib_masked_write(chg, DCDC_VPH_TRACK_SEL,
-					VPH_TRACK_SEL_MASK, 0);
-			if (rc < 0)
-				pr_debug("Couldn't set  DCDC_VPH_TRACK_SEL rc=%d\n",
-						rc);
-			chg->vph_set_flag = false;
-		}
+		pr_debug("vbus present,LCD off set dcdc vph 100mv\n");
+		/* config the DCDC_VPH_TRACK_SEL 100mv */
+		rc = smblib_masked_write(chg, DCDC_VPH_TRACK_SEL,
+				VPH_TRACK_SEL_MASK, 0);
+		if (rc < 0)
+			pr_debug("Couldn't set  DCDC_VPH_TRACK_SEL rc=%d\n",
+					rc);
+		chg->vph_set_flag = false;
 	}
 }
 
@@ -9109,23 +9083,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 	struct smb_charger *chip =
 		container_of(self, struct smb_charger, fb_notif);
 
-	if (evdata && evdata->data && chip) {
-		if (event == FB_EVENT_BLANK) {
-			blank = evdata->data;
-			if (*blank == FB_BLANK_UNBLANK) {
-				if (!chip->oem_lcd_is_on)
-					set_property_on_fg(chip,
-					POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF, 0);
-				chip->oem_lcd_is_on = true;
-			} else if (*blank == FB_BLANK_POWERDOWN) {
-				if (chip->oem_lcd_is_on != false)
-					set_property_on_fg(chip,
-					POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF, 1);
-				chip->oem_lcd_is_on = false;
-			}
-		}
-
-	}
+	set_property_on_fg(chip, POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF, 1);
 
 	return 0;
 }
