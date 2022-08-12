@@ -9207,52 +9207,6 @@ static int fb_notifier_callback(struct notifier_block *self,
 
 	return 0;
 }
-#elif defined(CONFIG_MSM_RDM_NOTIFY)
-static int msm_drm_notifier_callback(struct notifier_block *self,
-		unsigned long event, void *data)
-{
-	struct msm_drm_notifier *evdata = data;
-	struct smb_charger *chip =
-		container_of(self, struct smb_charger, msm_drm_notifier);
-	int *blank;
-	int typec_mode;
-	int rp_ua;
-
-	if ((evdata == NULL) || (evdata->id != MSM_DRM_PRIMARY_DISPLAY))
-		return 0;
-	if (event != MSM_DRM_EARLY_EVENT_BLANK)
-		return 0;
-	typec_mode = smblib_get_prop_typec_mode(chip);
-
-	if (evdata && evdata->data && chip) {
-		blank = evdata->data;
-		if (*blank == MSM_DRM_BLANK_UNBLANK ||
-				*blank == MSM_DRM_BLANK_UNBLANK_CHARGE) {
-			if (!chip->oem_lcd_is_on)
-				set_property_on_fg(chip,
-				POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF, 0);
-			chip->oem_lcd_is_on = true;
-			op_dcdc_vph_track_sel(chip);
-		} else if (*blank == MSM_DRM_BLANK_POWERDOWN ||
-				*blank == MSM_DRM_BLANK_POWERDOWN_CHARGE) {
-			if (chip->oem_lcd_is_on != false)
-				set_property_on_fg(chip,
-				POWER_SUPPLY_PROP_UPDATE_LCD_IS_OFF, 1);
-			chip->oem_lcd_is_on = false;
-			op_dcdc_vph_track_sel(chip);
-		}
-		/* add to set pd charging current 2.0A when panel on */
-		if (typec_mode == POWER_SUPPLY_TYPEC_SOURCE_HIGH ||
-			typec_mode == POWER_SUPPLY_TYPEC_SOURCE_MEDIUM ||
-			typec_mode == POWER_SUPPLY_TYPEC_SOURCE_DEFAULT) {
-			rp_ua = get_rp_based_dcp_current(chip, typec_mode);
-			vote(chip->usb_icl_votable,
-					SW_ICL_MAX_VOTER, true, rp_ua);
-		}
-	}
-
-	return 0;
-}
 #endif
 
 static void ffc_exit(struct smb_charger *chg)
@@ -11532,11 +11486,6 @@ int smblib_init(struct smb_charger *chg)
 
 	if (rc)
 		pr_debug("Unable to register fb_notifier: %d\n", rc);
-#elif defined(CONFIG_MSM_RDM_NOTIFY)
-		chg->msm_drm_notifier.notifier_call = msm_drm_notifier_callback;
-		rc = msm_drm_register_client(&chg->msm_drm_notifier);
-		if (rc)
-			pr_debug("Smb unable to register notifier: %d\n", rc);
 #endif /*CONFIG_FB*/
 
 	INIT_DELAYED_WORK(&chg->clear_hdc_work, clear_hdc_work);
