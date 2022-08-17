@@ -1134,8 +1134,7 @@ cmd_fail:
 	cmi_deregister(cpe_d.cpe_cmi_handle);
 }
 
-static enum cpe_process_result cpe_boot_complete(
-		struct cpe_info *t_info)
+static int cpe_boot_complete(struct cpe_info *t_info)
 {
 	struct cmi_core_svc_cmdrsp_shared_mem_alloc *p = NULL;
 
@@ -1347,7 +1346,7 @@ static enum cpe_process_result cpe_mt_process_cmd(
 
 		cpe_change_state(t_info, CPE_STATE_SENDING_MSG,
 				CPE_SS_MSG_SEND_INBOX);
-		rc = cpe_send_msg_to_inbox(t_info, 0, m);
+		rc =  (enum cpe_process_result)cpe_send_msg_to_inbox(t_info, 0, m);
 		break;
 
 	case CPE_CMD_SEND_MSG_COMPLETE:
