@@ -23,7 +23,7 @@ device.name10=OnePlus7TPro
 device.name11=hotdog
 device.name12=OnePlus7TProNR
 device.name13=hotdogg
-supported.versions=11 - 12
+supported.versions=11 - 13
 '; } # end properties
 
 # shell variables
