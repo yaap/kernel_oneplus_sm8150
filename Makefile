@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 4
 PATCHLEVEL = 14
-SUBLEVEL = 291
+SUBLEVEL = 292
 EXTRAVERSION =
 NAME = Petit Gorille
 
@@ -603,7 +603,7 @@ scripts: scripts_basic include/config/auto.conf include/config/tristate.conf \
 
 # Objects we will link into vmlinux / subdirs we need to visit
 init-y		:= init/
-drivers-y	:= drivers/ sound/ firmware/ techpack/ techpack/data/drivers/
+drivers-y	:= drivers/ sound/ firmware/ techpack/
 net-y		:= net/
 libs-y		:= lib/
 core-y		:= usr/
