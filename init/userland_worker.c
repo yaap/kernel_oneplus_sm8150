@@ -28,6 +28,7 @@ static struct delayed_work userland_work;
 
 unsigned int is_stock;
 unsigned int is_a12;
+unsigned int is_a13;
 
 static void free_memory(char** argv, int size)
 {
@@ -163,6 +164,7 @@ static void common_optimize(void)
 static void set_kernel_module_params(void) {
 	is_stock = !linux_test("/system/etc/buildinfo/oem_build.prop", false);
 	is_a12 = !linux_test("/system/etc/classpaths/", true);
+	is_a13 = !linux_test("/system/etc/classpaths/", true);
 }
 
 static void userland_worker(struct work_struct *work)
