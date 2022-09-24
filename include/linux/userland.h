@@ -9,5 +9,6 @@
 
 extern unsigned int is_stock;
 extern unsigned int is_a12;
+extern unsigned int is_a13;
 
 #endif /* _LINUX_USERLAND_H_ */
