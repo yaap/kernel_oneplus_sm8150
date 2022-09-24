@@ -54,20 +54,6 @@ config ZRAM_DEF_COMP
 	default "lz4hc" if ZRAM_DEF_COMP_LZ4HC
 	default "842" if ZRAM_DEF_COMP_842
 
-config ZRAM_DEDUP
-	bool "Deduplication support for ZRAM data"
-	depends on ZRAM && LIBCRC32C
-	default n
-	help
-	  Deduplicate ZRAM data to reduce amount of memory consumption.
-	  Advantage largely depends on the workload. In some cases, this
-          option reduces memory usage to the half. However, if there is no
-	  duplicated data, the amount of memory consumption would be
-	  increased due to additional metadata usage. And, there is
-	  computation time trade-off. Please check the benefit before
-	  enabling this option. Experiment shows the positive effect when
-	  the zram is used as blockdev and is used to store build output.
-
 config ZRAM_WRITEBACK
        bool "Write back incompressible or idle page to backing device"
        depends on ZRAM
@@ -84,10 +70,10 @@ config ZRAM_WRITEBACK
 
 config ZRAM_MEMORY_TRACKING
 	bool "Track zRam block status"
-	depends on ZRAM && PROC_FS
+	depends on ZRAM && DEBUG_FS
 	help
 	  With this feature, admin can track the state of allocated blocks
 	  of zRAM. Admin could see the information via
-	  /proc/zram/zramX/block_state.
+	  /sys/kernel/debug/zram/zramX/block_state.
 
 	  See Documentation/admin-guide/blockdev/zram.rst for more information.
