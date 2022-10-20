@@ -651,10 +651,20 @@ static ssize_t screen_state_get(struct device *device,
 	return scnprintf(buffer, PAGE_SIZE, "%i\n", gfDev->screen_state);
 }
 
-static DEVICE_ATTR(screen_state, 0400, screen_state_get, NULL);
+static inline ssize_t udfps_pressed_get(struct device *device,
+			     struct device_attribute *attribute,
+			     char *buffer)
+{
+	struct gf_dev *gfDev = dev_get_drvdata(device);
+	return scnprintf(buffer, PAGE_SIZE, "%i\n", gfDev->udfps_pressed);
+}
+
+static DEVICE_ATTR(screen_state, S_IRUGO, screen_state_get, NULL);
+static DEVICE_ATTR(udfps_pressed, S_IRUGO, udfps_pressed_get, NULL);
 
 static struct attribute *gf_attributes[] = {
 	&dev_attr_screen_state.attr,
+	&dev_attr_udfps_pressed.attr,
 	NULL
 };
 
@@ -665,7 +675,7 @@ static const struct attribute_group gf_attribute_group = {
 int gf_opticalfp_irq_handler(int event)
 {
 	char msg = 0;
-
+        struct gf_dev *gf_dev = &gf;
 	pr_info("[info]:%s, event %d", __func__, event);
 
 	if (gf.spi == NULL) {
@@ -674,14 +684,17 @@ int gf_opticalfp_irq_handler(int event)
 	switch(event) {
 	case 1:
 	  devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
+	  gf_dev->udfps_pressed = 1;
 	  msg = GF_NET_EVENT_TP_TOUCHDOWN;
           sendnlmsg(&msg);
 	  break;
 	case 0:
+	  gf_dev->udfps_pressed = 0;
 	  msg = GF_NET_EVENT_TP_TOUCHUP;
 	  sendnlmsg(&msg);
 	  break;
 	}
+	sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
 
 	__pm_wakeup_event(&fp_wakelock, 2000);
 
