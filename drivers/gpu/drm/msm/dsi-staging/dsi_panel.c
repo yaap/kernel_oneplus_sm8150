@@ -781,7 +781,10 @@ int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
 			wait = false;
 
 		if ((panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M) &&
-			((type == DSI_CMD_SET_HBM_ON_5) || (type == DSI_CMD_SET_HBM_OFF)))
+			((type == DSI_CMD_SET_HBM_ON_5)
+			|| (type == DSI_CMD_SET_HBM_OFF)
+			|| (type == DSI_CMD_AOD_OFF_HBM_ON_SETTING)
+			|| (type == DSI_CMD_SET_AOD_ON_5)))
 			wait_multi = 725;
 
 		if (cmds->post_wait_ms && wait)

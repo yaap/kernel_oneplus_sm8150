@@ -615,8 +615,8 @@ static int _sde_connector_update_hbm(struct sde_connector *c_conn)
 		//struct drm_encoder *drm_enc = c_conn->encoder;
 		dsi_display->panel->is_hbm_enabled = fingerprint_mode;
 		if (fingerprint_mode) {
-			HBM_flag=true;
 			mutex_lock(&dsi_display->panel->panel_lock);
+			HBM_flag=true;
 			if (dsi_display->panel->aod_status==1 && !finger_type) {
 				if (dsi_display->panel->aod_mode == 2) {
 					dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_AOD_OFF_HBM_ON_SETTING);
