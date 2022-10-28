@@ -6640,25 +6640,24 @@ struct msm_vidc_buffer *msm_comm_get_vidc_buffer(struct msm_vidc_inst *inst,
 	struct vb2_v4l2_buffer *vbuf;
 	struct vb2_buffer *vb;
 	unsigned long dma_planes[VB2_MAX_PLANES] = {0};
-	struct msm_vidc_buffer *mbuf;
+	struct msm_vidc_buffer *mbuf = NULL;
 	bool found = false;
-	int i, planes = 0;
+	int i = 0, planes = 0;
 
 	if (!inst || !vb2) {
 		dprintk(VIDC_ERR, "%s: invalid params\n", __func__);
 		return NULL;
 	}
 
-	for (i = 0; i < vb2->num_planes; i++) {
+	for (planes = 0; planes < vb2->num_planes; planes++) {
 		/*
 		 * always compare dma_buf addresses which is guaranteed
 		 * to be same across the processes (duplicate fds).
 		 */
-		dma_planes[i] = (unsigned long)msm_smem_get_dma_buf(
-				vb2->planes[i].m.fd);
-		if (!dma_planes[i])
-			return NULL;
-		msm_smem_put_dma_buf((struct dma_buf *)dma_planes[i]);
+		dma_planes[planes] = (unsigned long)msm_smem_get_dma_buf(
+				vb2->planes[planes].m.fd);
+		if (!dma_planes[planes])
+			goto put_ref;
 	}
 
 	mutex_lock(&inst->registeredbufs.lock);
