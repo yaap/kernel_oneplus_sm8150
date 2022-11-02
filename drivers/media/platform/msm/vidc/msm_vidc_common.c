@@ -6642,7 +6642,7 @@ struct msm_vidc_buffer *msm_comm_get_vidc_buffer(struct msm_vidc_inst *inst,
 	unsigned long dma_planes[VB2_MAX_PLANES] = {0};
 	struct msm_vidc_buffer *mbuf;
 	bool found = false;
-	int i;
+	int i, planes = 0;
 
 	if (!inst || !vb2) {
 		dprintk(VIDC_ERR, "%s: invalid params\n", __func__);
@@ -6761,27 +6761,21 @@ struct msm_vidc_buffer *msm_comm_get_vidc_buffer(struct msm_vidc_inst *inst,
 	if (!found)
 		list_add_tail(&mbuf->list, &inst->registeredbufs.list);
 
-	mutex_unlock(&inst->registeredbufs.lock);
-
-	/*
-	 * Return mbuf if decode batching is enabled as this buffer
-	 * may trigger queuing full batch to firmware, also this buffer
-	 * will not be queued to firmware while full batch queuing,
-	 * it will be queued when rbr event arrived from firmware.
-	 */
-	if (rc == -EEXIST && !inst->batch.enable)
-		return ERR_PTR(rc);
-
-	return mbuf;
-
 exit:
-	dprintk(VIDC_ERR, "%s: rc %d\n", __func__, rc);
-	msm_comm_unmap_vidc_buffer(inst, mbuf);
-	if (!found)
-		kref_put_mbuf(mbuf);
+	if (rc == -EEXIST) {
+		print_vidc_buffer(VIDC_DBG, "qbuf upon rbr", inst, mbuf);
+	} else if (rc) {
+		dprintk(VIDC_ERR, "%s: rc %d\n", __func__, rc);
+		msm_comm_unmap_vidc_buffer(inst, mbuf);
+		if (!found)
+			kref_put_mbuf(mbuf);
+	}
 	mutex_unlock(&inst->registeredbufs.lock);
+put_ref:
+	while (planes)
+		msm_smem_put_dma_buf((struct dma_buf *)dma_planes[--planes]);
 
-	return ERR_PTR(rc);
+	return rc ? ((rc == -EEXIST && !inst->batch.enable) ? ERR_PTR(rc):mbuf) : mbuf;
 }
 
 void msm_comm_put_vidc_buffer(struct msm_vidc_inst *inst,
