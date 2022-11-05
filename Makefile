@@ -733,6 +733,7 @@ endif
 ifdef CONFIG_INLINE_OPTIMIZATION
 KBUILD_CFLAGS	+= -mllvm -inline-threshold=2000
 KBUILD_CFLAGS	+= -mllvm -inlinehint-threshold=3000
+KBUILD_CFLAGS	+= -mllvm -unroll-threshold=700
 endif
 
 endif
