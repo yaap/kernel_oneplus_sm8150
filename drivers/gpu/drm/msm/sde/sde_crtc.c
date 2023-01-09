@@ -5803,7 +5803,6 @@ static int sde_crtc_onscreenfinger_atomic_check(struct sde_crtc_state *cstate,
 			pstates[aod_index].sde_pstate->property_values[PLANE_PROP_ALPHA].value = 0;
 			aod_index = -1;
 		}
-		return 0;
 	}
 
 	if ((fp_index >= 0 && dim_mode != 0) ||
