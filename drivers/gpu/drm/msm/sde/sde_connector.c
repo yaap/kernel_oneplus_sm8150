@@ -19,6 +19,7 @@
 #include "sde_encoder.h"
 #include <linux/backlight.h>
 #include <linux/string.h>
+#include <linux/devfreq_boost.h>
 #include "dsi_drm.h"
 #include "dsi_display.h"
 #include "sde_crtc.h"
@@ -659,6 +660,7 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 		level = 5;
 		oneplus_dim_status = 5;
 		finger_type = true;
+                devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
 	}
 
 	dsi_panel_set_hbm_mode(panel, level);
