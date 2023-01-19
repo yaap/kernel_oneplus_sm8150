@@ -401,9 +401,15 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
 		if (gesture_info_temp.gesture_type == SingleTap) {
 			if (sec_double_tap(&gesture_info_temp) == 1) {
 				gesture_info_temp.gesture_type = DouTap;
+				ts->double_tap_pressed = 1;
+			} else {
+				ts->double_tap_pressed = 0;
 			}
 		}
+	} else {
+		ts->double_tap_pressed = 0;
 	}
+	sysfs_notify(&ts->client->dev.kobj, NULL, "double_tap_pressed");
 	TPD_INFO("detect %s gesture\n",
 		 gesture_info_temp.gesture_type ==
 		 DouTap ? "double tap" : gesture_info_temp.gesture_type ==
@@ -480,6 +486,16 @@ static void tp_gesture_handle(struct touchpanel_data *ts)
 		input_sync(ts->input_dev);
 	}
 }
+
+static inline ssize_t double_tap_pressed_get(struct device *device,
+				struct device_attribute *attribute,
+				char *buffer)
+{
+	struct touchpanel_data *ts = dev_get_drvdata(device);
+	return scnprintf(buffer, PAGE_SIZE, "%i\n", ts->double_tap_pressed);
+}
+
+static DEVICE_ATTR(double_tap_pressed, S_IRUGO, double_tap_pressed_get, NULL);
 
 void tp_touch_btnkey_release(void)
 {
@@ -2104,6 +2120,11 @@ static int init_touchpanel_proc(struct touchpanel_data *ts)
 	}
 
 	if (device_create_file(&ts->client->dev, &dev_attr_tp_fw_update)) {
+		TPD_INFO("driver_create_file failt\n");
+		ret = -ENOMEM;
+	}
+
+	if (device_create_file(&ts->client->dev, &dev_attr_double_tap_pressed)) {
 		TPD_INFO("driver_create_file failt\n");
 		ret = -ENOMEM;
 	}
