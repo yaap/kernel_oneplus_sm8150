@@ -716,7 +716,7 @@ int sde_connector_pre_kickoff(struct drm_connector *connector)
 
 	rc = c_conn->ops.pre_kickoff(connector, c_conn->display, &params);
 
-end:
+//end:
 	return rc;
 }
 
