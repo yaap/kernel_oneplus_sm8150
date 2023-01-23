@@ -3540,6 +3540,9 @@ static int fb_notifier_callback(struct notifier_block *self,
 			case MSM_DRM_BLANK_UNBLANK_CHARGE:
 				goto resume;
 				break;
+			case MSM_DRM_ONSCREENFINGERPRINT_EVENT:
+				goto resume;
+				break;
 			case MSM_DRM_BLANK_POWERDOWN_CUST:
 				goto suspend;
 				break;
