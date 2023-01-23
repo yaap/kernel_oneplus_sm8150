@@ -3530,65 +3530,67 @@ static int fb_notifier_callback(struct notifier_block *self,
 		blank = evdata->data;
 		TPD_INFO("%s: event = %ld, blank = %d\n", __func__, event,
 			 *blank);
-		if (*blank == MSM_DRM_BLANK_POWERDOWN_CUST) {	//suspend
-			if (event == MSM_DRM_EARLY_EVENT_BLANK) {	//early event
-
-				timed_out = wait_for_completion_timeout(&ts->pm_complete, 0.5 * HZ);	//wait resume over for 0.5s
-				if ((0 == timed_out) || (ts->pm_complete.done)) {
-					TPD_INFO
-					    ("completion state, timed_out:%d, done:%d\n",
-					     timed_out, ts->pm_complete.done);
-				}
-
-				ts->suspend_state = TP_SUSPEND_EARLY_EVENT;	//set suspend_resume_state
-
-				if (ts->tp_suspend_order == TP_LCD_SUSPEND) {
-					tp_suspend(ts->dev);
-				} else if (ts->tp_suspend_order ==
-					   LCD_TP_SUSPEND) {
-					if (!ts->gesture_enable) {
-						disable_irq_nosync(ts->irq);	//avoid iic error
-					}
-					tp_suspend(ts->dev);
-				}
-			} else if (event == MSM_DRM_EVENT_BLANK) {	//event
-
-				if (ts->tp_suspend_order == TP_LCD_SUSPEND) {
-
-				} else if (ts->tp_suspend_order ==
-					   LCD_TP_SUSPEND) {
-					tp_suspend(ts->dev);
-				}
-			}
-		} else if (*blank == MSM_DRM_BLANK_UNBLANK_CUST) {	//resume
-			if (event == MSM_DRM_EARLY_EVENT_BLANK) {	//early event
-
-				timed_out = wait_for_completion_timeout(&ts->pm_complete, 0.5 * HZ);	//wait suspend over for 0.5s
-				if ((0 == timed_out) || (ts->pm_complete.done)) {
-					TPD_INFO
-					    ("completion state, timed_out:%d, done:%d\n",
-					     timed_out, ts->pm_complete.done);
-				}
-
-				ts->suspend_state = TP_RESUME_EARLY_EVENT;	//set suspend_resume_state
-
-				if (ts->tp_resume_order == TP_LCD_RESUME) {
-					tp_resume(ts->dev);
-				} else if (ts->tp_resume_order == LCD_TP_RESUME) {
-					disable_irq_nosync(ts->irq);
-				}
-			} else if (event == MSM_DRM_EVENT_BLANK) {	//event
-
-				if (ts->tp_resume_order == TP_LCD_RESUME) {
-
-				} else if (ts->tp_resume_order == LCD_TP_RESUME) {
-					tp_resume(ts->dev);
-					enable_irq(ts->irq);
-				}
-			}
+		switch (*blank) {
+			case MSM_DRM_BLANK_UNBLANK:
+				goto resume;
+				break;
+			case MSM_DRM_BLANK_UNBLANK_CUST:
+				goto resume;
+				break;
+			case MSM_DRM_BLANK_UNBLANK_CHARGE:
+				goto resume;
+				break;
+			case MSM_DRM_BLANK_POWERDOWN_CUST:
+				goto suspend;
+				break;
+			case MSM_DRM_BLANK_POWERDOWN:
+				goto suspend;
+				break;
+			case MSM_DRM_BLANK_NORMAL:
+				goto suspend;
+				break;
+			case MSM_DRM_BLANK_POWERDOWN_CHARGE:
+				goto suspend;
+				break;
 		}
 	}
 
+resume:
+	timed_out = wait_for_completion_timeout(&ts->pm_complete, 0.5 * HZ);	//wait suspend over for 0.5s
+	if ((0 == timed_out) || (ts->pm_complete.done)) {
+		TPD_INFO
+		    ("completion state, timed_out:%d, done:%d\n",
+		     timed_out, ts->pm_complete.done);
+	}
+
+	ts->suspend_state = TP_RESUME_EARLY_EVENT;	//set suspend_resume_state
+
+	if (ts->tp_resume_order == TP_LCD_RESUME) {
+		tp_resume(ts->dev);
+	} else if (ts->tp_resume_order == LCD_TP_RESUME) {
+		disable_irq_nosync(ts->irq);
+	}
+	return 0;
+
+suspend:
+	timed_out = wait_for_completion_timeout(&ts->pm_complete, 0.5 * HZ);	//wait resume over for 0.5s
+	if ((0 == timed_out) || (ts->pm_complete.done)) {
+		TPD_INFO
+		    ("completion state, timed_out:%d, done:%d\n",
+		     timed_out, ts->pm_complete.done);
+	}
+
+	ts->suspend_state = TP_SUSPEND_EARLY_EVENT;	//set suspend_resume_state
+
+	if (ts->tp_suspend_order == TP_LCD_SUSPEND) {
+		tp_suspend(ts->dev);
+	} else if (ts->tp_suspend_order ==
+		   LCD_TP_SUSPEND) {
+		if (!ts->gesture_enable) {
+			disable_irq_nosync(ts->irq);	//avoid iic error
+		}
+		tp_suspend(ts->dev);
+	}
 	return 0;
 }
 #endif
