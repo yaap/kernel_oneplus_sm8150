@@ -3502,6 +3502,7 @@ ssize_t oneplus_display_notify_fp_press(struct device *dev,
 extern int aod_layer_hide;
 extern int backup_dim_status;
 extern bool backup_dimlayer_hbm;
+extern bool HBM_flag;
 extern int dsi_panel_tx_cmd_set(struct dsi_panel *panel, enum dsi_cmd_set_type type);
 int oneplus_dim_status = 0;
 int oneplus_aod_fod = 0;
@@ -3519,7 +3520,7 @@ ssize_t oneplus_display_notify_dim(struct device *dev,
 	struct drm_atomic_state *state;
 	struct drm_crtc_state *crtc_state;
 	struct drm_crtc *crtc;
-	int err = 0;
+	int err = 0, rc = 0;
 	int dim_status = 0;
 
 	if ((connector == NULL) || (connector->encoder == NULL)
@@ -3565,6 +3566,15 @@ ssize_t oneplus_display_notify_dim(struct device *dev,
 	} else
 		pr_debug("notify dim %d,aod = %d press= %d aod_hide =%d\n",
 			oneplus_dim_status, dsi_display->panel->aod_status, oneplus_onscreenfp_status, aod_layer_hide);
+	if (oneplus_dim_status == 1 && HBM_flag) {
+		rc = dsi_panel_tx_cmd_set(dsi_display->panel, DSI_CMD_SET_HBM_ON_5);
+		if (rc) {
+			pr_debug("failed to send DSI_CMD_SET_HBM_ON_5 cmds, rc=%d\n", rc);
+			return rc;
+		}
+		pr_debug("Notify dim not commit,send DSI_CMD_SET_HBM_ON_5 cmds\n");
+		return count;
+	}
 	drm_modeset_lock_all(drm_dev);
 
 	state = drm_atomic_state_alloc(drm_dev);
