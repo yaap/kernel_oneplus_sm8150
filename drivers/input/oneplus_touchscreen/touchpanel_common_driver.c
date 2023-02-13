@@ -3422,7 +3422,7 @@ static void tp_resume(struct device *dev)
  * do actully resume function
  * Do not care the result: Return void type
  */
-static void speedup_resume(struct work_struct *work)
+static void __always_inline speedup_resume(struct work_struct *work)
 {
 	int timed_out = 0;
 	struct touchpanel_data *ts = container_of(work, struct touchpanel_data,
