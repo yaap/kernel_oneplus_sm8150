@@ -20,6 +20,7 @@
 #include <linux/backlight.h>
 #include <linux/string.h>
 #include <linux/devfreq_boost.h>
+#include <linux/msm_drm_notify.h>
 #include "dsi_drm.h"
 #include "dsi_display.h"
 #include "sde_crtc.h"
@@ -645,6 +646,8 @@ struct dsi_panel *sde_connector_panel(struct sde_connector *c_conn)
 static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 {
 	struct dsi_panel *panel;
+	struct msm_drm_notifier notifier_data;
+	int blank;
 	int level = 0;
 	bool status;
 
@@ -657,6 +660,7 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 		return;
 
 	if (status) {
+		blank = 1;
 		level = 5;
                 devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
 		dsi_panel_set_nolp(panel);
@@ -664,6 +668,8 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 			|| panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M)
 			sde_encoder_wait_for_event(c_conn->encoder,
 					MSM_ENC_VBLANK);
+	} else {
+		blank = 0;
 	}
 	dsi_panel_set_hbm_mode(panel, level);
 
@@ -674,6 +680,10 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 	dsi_panel_set_fod_ui(panel, status);
 	if (!status)
 		_sde_connector_update_bl_scale(c_conn);
+
+	notifier_data.data = &blank;
+	notifier_data.id = connector_state_crtc_index;
+	msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT, &notifier_data);
 }
 
 int sde_connector_pre_kickoff(struct drm_connector *connector)
