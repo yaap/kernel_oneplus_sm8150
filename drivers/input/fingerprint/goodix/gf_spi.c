@@ -402,8 +402,7 @@ static inline ssize_t screen_state_get(struct device *device,
 			     struct device_attribute *attribute,
 			     char *buffer)
 {
-	struct gf_dev *gfDev = dev_get_drvdata(device);
-	return scnprintf(buffer, PAGE_SIZE, "%i\n", gfDev->screen_state);
+	return scnprintf(buffer, PAGE_SIZE, "%i\n", 1);
 }
 
 static inline ssize_t udfps_pressed_get(struct device *device,
@@ -483,10 +482,6 @@ static int __always_inline goodix_fb_state_chg_callback(
 	unsigned int blank;
 	char msg = 0;
 
-	if (val != MSM_DRM_EARLY_EVENT_BLANK &&
-		val != MSM_DRM_ONSCREENFINGERPRINT_EVENT)
-		return 0;
-
 	if (evdata->id != MSM_DRM_PRIMARY_DISPLAY)
 	    return 0;
 
@@ -509,8 +504,7 @@ static int __always_inline goodix_fb_state_chg_callback(
 	}
 
 	gf_dev = container_of(nb, struct gf_dev, msm_drm_notif);
-	if (evdata && evdata->data && val ==
-		MSM_DRM_EARLY_EVENT_BLANK && gf_dev) {
+	if (evdata && evdata->data && gf_dev) {
 		blank = *(int *)(evdata->data);
 		switch (blank) {
 		case MSM_DRM_BLANK_POWERDOWN:
@@ -519,9 +513,6 @@ static int __always_inline goodix_fb_state_chg_callback(
 				msg = GF_NET_EVENT_FB_BLACK;
 				sendnlmsg(&msg);
 			}
-			gf_dev->screen_state = 0;
-			sysfs_notify(&gf_dev->spi->dev.kobj,
-				NULL, dev_attr_screen_state.attr.name);
 			break;
 		case MSM_DRM_BLANK_UNBLANK:
 			if (gf_dev->device_available == 1) {
@@ -529,9 +520,6 @@ static int __always_inline goodix_fb_state_chg_callback(
 				msg = GF_NET_EVENT_FB_UNBLACK;
 				sendnlmsg(&msg);
 			}
-			gf_dev->screen_state = 1;
-			sysfs_notify(&gf_dev->spi->dev.kobj,
-				NULL, dev_attr_screen_state.attr.name);
 			break;
 		default:
 			break;
