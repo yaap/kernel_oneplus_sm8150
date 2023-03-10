@@ -646,9 +646,9 @@ static ssize_t screen_state_get(struct device *device,
 			     struct device_attribute *attribute,
 			     char *buffer)
 {
-	struct gf_dev *gfDev = dev_get_drvdata(device);
+//	struct gf_dev *gfDev = dev_get_drvdata(device);
 
-	return scnprintf(buffer, PAGE_SIZE, "%i\n", gfDev->screen_state);
+	return scnprintf(buffer, PAGE_SIZE, "%i\n", 1);
 }
 
 static inline ssize_t udfps_pressed_get(struct device *device,
@@ -839,9 +839,6 @@ static int __always_inline goodix_fb_state_chg_callback(
 				}
 #endif
 			}
-			gf_dev->screen_state = 0;
-			sysfs_notify(&gf_dev->spi->dev.kobj,
-				NULL, dev_attr_screen_state.attr.name);
 			break;
 		case MSM_DRM_BLANK_UNBLANK:
 			if (gf_dev->device_available == 1) {
@@ -855,9 +852,6 @@ static int __always_inline goodix_fb_state_chg_callback(
 						SIGIO, POLL_IN);
 #endif
 			}
-			gf_dev->screen_state = 1;
-			sysfs_notify(&gf_dev->spi->dev.kobj,
-				NULL, dev_attr_screen_state.attr.name);
 			break;
 		default:
 			pr_info("%s defalut\n", __func__);
