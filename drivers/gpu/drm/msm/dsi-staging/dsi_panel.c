@@ -110,7 +110,6 @@ static char dsi_dsc_rc_range_max_qp_1_1_scr1[][15] = {
 static char dsi_dsc_rc_range_bpg_offset[] = {2, 0, 0, -2, -4, -6, -8, -8,
 		-8, -10, -10, -12, -12, -12, -12};
 
-static bool   hbm_finger_print = false;
 static int    hbm_brightness_flag = 0;
 static int    cur_backlight = -1;
 static int    cur_fps = 60;
@@ -878,7 +877,6 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 	u32 bl_lvl)
 {
 	int rc = 0;
-	u32 count;
 	struct mipi_dsi_device *dsi;
 	struct dsi_display_mode *mode;
 
@@ -892,37 +890,15 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 
 	saved_backlight = bl_lvl;
 
-	if (panel->is_hbm_enabled) {
-		hbm_finger_print = true;
-		pr_debug("HBM is enabled\n");
-		return 0;
-	}
-
 	if (panel->dc_dim && bl_lvl != 0)
 		bl_lvl = 1023;
 
 	if (panel->bl_config.bl_high2bit) {
-		if (HBM_flag == true)
-			return 0;
-
 		if (cur_backlight == bl_lvl && (mode_fps != cur_fps ||
-				 cur_h != panel->cur_mode->timing.h_active) && !hbm_finger_print) {
+				 cur_h != panel->cur_mode->timing.h_active)) {
 			cur_fps = mode_fps;
 			cur_h = panel->cur_mode->timing.h_active;
 			return 0;
-		}
-
-		if (hbm_brightness_flag == 1) {
-			count = mode->priv_info->cmd_sets[DSI_CMD_SET_HBM_BRIGHTNESS_OFF].count;
-			if (!count) {
-				pr_debug("This panel does not support HBM brightness off mode.\n");
-				goto error;
-			}
-			else {
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_BRIGHTNESS_OFF);
-				pr_debug("Send DSI_CMD_SET_HBM_BRIGHTNESS_OFF cmds.\n");
-				hbm_brightness_flag = 0;
-			}
 		}
 
 		rc = mipi_dsi_dcs_set_display_brightness_samsung(dsi, bl_lvl);
@@ -930,7 +906,6 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 		cur_backlight = bl_lvl;
 		cur_fps = mode_fps;
 		cur_h = panel->cur_mode->timing.h_active;
-		hbm_finger_print = false;
 	}
 	else
 		rc = mipi_dsi_dcs_set_display_brightness(dsi,
@@ -938,7 +913,6 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 	if (rc < 0)
 		pr_debug("failed to update dcs backlight:%d\n", bl_lvl);
 
-error:
 	return rc;
 }
 
@@ -5906,12 +5880,6 @@ int dsi_panel_set_hbm_brightness(struct dsi_panel *panel, int level)
 
 	dsi = &panel->mipi_device;
 	mode = panel->cur_mode;
-
-	if (panel->is_hbm_enabled) {
-		hbm_finger_print = true;
-		pr_debug("HBM is enabled\n");
-		return 0;
-	}
 
 	mutex_lock(&panel->panel_lock);
 	if (hbm_brightness_flag == 0) {
