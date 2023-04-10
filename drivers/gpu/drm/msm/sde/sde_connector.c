@@ -667,6 +667,7 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 		oneplus_dim_status = 5;
 		finger_type = true;
                 devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
+		dsi_panel_set_nolp(panel);
 	}
 
 	if (status && (panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M ||
