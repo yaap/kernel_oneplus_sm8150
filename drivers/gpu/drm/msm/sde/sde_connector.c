@@ -641,7 +641,6 @@ extern bool HBM_flag;
 static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 {
 	struct dsi_panel *panel;
-	u32 refresh_rate;
 	int level = 0;
 	bool status;
 
@@ -653,10 +652,6 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 	if (status == dsi_panel_get_fod_ui(panel))
 		return;
 
-	mutex_lock(&panel->panel_lock);
-	refresh_rate = panel->cur_mode->timing.refresh_rate;
-	mutex_unlock(&panel->panel_lock);
-
 	if (status) {
 		level = 5;
 		oneplus_dim_status = 5;
@@ -665,14 +660,16 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
 		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200, true);
 		dsi_panel_set_nolp(panel);
+		if (panel->cur_mode->timing.refresh_rate < 90
+			|| panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M)
+			sde_encoder_wait_for_event(c_conn->encoder,
+					MSM_ENC_VBLANK);
 	}
+	dsi_panel_set_hbm_mode(panel, level);
 
-	if (status && (panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M ||
-		refresh_rate < 90))
+	if (!status && panel->cur_mode->timing.refresh_rate < 90)
 		sde_encoder_wait_for_event(c_conn->encoder,
 				MSM_ENC_VBLANK);
-
-	dsi_panel_set_hbm_mode(panel, level);
 
 	dsi_panel_set_fod_ui(panel, status);
 }
