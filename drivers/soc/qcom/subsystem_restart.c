@@ -869,24 +869,11 @@ static int subsystem_powerup(struct subsys_device *dev, void *data)
 			|| system_state == SYSTEM_POWER_OFF)
 			WARN(1, "SSR aborted: %s, system reboot/shutdown is under way\n",
 				name);
-		else {
-			if (!dev->desc->ignore_ssr_failure) {
-				/*
-				 * There is a slight window between reboot and
-				 * system_state changing to SYSTEM_RESTART or
-				 * SYSTEM_POWER_OFF. Add a delay before panic
-				 * to ensure SSR that happens during reboot
-				 * will not result in a kernel panic.
-				 */
-				msleep(3000);
-				if (system_state != SYSTEM_RESTART
-					&& system_state != SYSTEM_POWER_OFF)
-					panic("[%s:%d]: Powerup error: %s!",
-						current->comm,
-						current->pid, name);
-			}
+		else if (!dev->desc->ignore_ssr_failure)
+			panic("[%s:%d]: Powerup error: %s!",
+				current->comm, current->pid, name);
+		else
 			pr_err("Powerup failure on %s\n", name);
-		}
 		return ret;
 	}
 
@@ -1005,7 +992,7 @@ static ssize_t proc_restart_level_all_write(struct file *p_file,
 		subsys = find_subsys_device("esoc0");
 		if (!subsys)
 			return -ENODEV;
-		subsys->restart_level = RESET_SOC;
+		subsys->restart_level = RESET_SUBSYS_COUPLED;
 
 
 	} else if (!strncasecmp(&temp[0], "1", 1)) {
@@ -1476,6 +1463,8 @@ static void __subsystem_restart_dev(struct subsys_device *dev)
 			track->p_state = SUBSYS_CRASHED;
 			__pm_stay_awake(&dev->ssr_wlock);
 			queue_work(ssr_wq, &dev->work);
+		} else {
+			panic("Subsystem %s crashed during SSR!", name);
 		}
 	} else
 		WARN(dev->track.state == SUBSYS_OFFLINE,
@@ -1494,6 +1483,14 @@ static void device_restart_work_hdlr(struct work_struct *work)
 	 * sync() and fclose() on attempting the dump.
 	 */
 	msleep(100);
+	/*
+	if (true == modem_5G_panic) {
+		panic("5G DUMP : The expected panic to get 5G dump. ");
+	} else {
+		panic("subsys-restart: Resetting the SoC - %s crashed.",
+							dev->desc->name);
+	}
+	*/
 }
 
 #define KMSG_BUFSIZE 512
@@ -1630,9 +1627,6 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		return 0;
 	}
 
-	if (!strcmp(name, "adsp"))
-		dev->restart_level = RESET_SUBSYS_COUPLED;
-
 	switch (dev->restart_level) {
 
 	case RESET_SUBSYS_COUPLED:
@@ -1640,10 +1634,15 @@ int subsystem_restart_dev(struct subsys_device *dev)
 		break;
 	case RESET_SOC:
 		pr_err("[OEM_MDM] RESET_SOC [%s]\n", name);
-		if (!(strcmp(name, "esoc0"))) {
+		if (get_ssr_reason_state() && is_oem_esoc_ssr() == 0 &&
+				!(strcmp(name, "esoc0"))) {
 			pr_err("[OEM_MDM] SDX5x %s force SSR to get dump\n",
 					name);
+			oem_set_esoc_ssr(1);
 			__subsystem_restart_dev(dev);
+		} else if (is_oem_esoc_ssr() == 1) {
+			pr_err(
+			"[OEM_MDM] Skip SS crash because SDX5x has collapsed\n");
 		} else {
 			__pm_stay_awake(&dev->ssr_wlock);
 			schedule_work(&dev->device_restart_work);
