@@ -704,6 +704,7 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	if (gf.spi == NULL) {
 		return 0;
 	}
+	__pm_wakeup_event(&fp_wakelock, 2000);
 	switch(event) {
 	case 1:
 	  devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
@@ -718,8 +719,6 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	  break;
 	}
 	sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-
-	__pm_wakeup_event(&fp_wakelock, 2000);
 
 	return 0;
 }
