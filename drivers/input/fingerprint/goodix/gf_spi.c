@@ -455,6 +455,7 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	if (gf.spi == NULL) {
 		return 0;
 	}
+	__pm_wakeup_event(&fp_wakelock, 2000);
 	switch(event) {
 	case 1:
 	  gf_dev->udfps_pressed = 1;
@@ -468,8 +469,6 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	  break;
 	}
 	sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-
-	__pm_wakeup_event(&fp_wakelock, 2000);
 
 	return 0;
 }
