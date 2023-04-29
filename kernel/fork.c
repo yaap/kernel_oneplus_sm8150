@@ -2264,8 +2264,8 @@ long _do_fork(unsigned long clone_flags,
 	/* Boost CPU to the max for 500 ms when userspace launches an app */
 	if (task_is_zygote(current)) {
 		cpu_input_boost_kick_max(500, false);
-		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 700, false);
-		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 700, false);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500, true);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 500, true);
 	}
 
 	/*
