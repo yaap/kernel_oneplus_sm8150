@@ -2246,7 +2246,7 @@ repeat:
 	__split_huge_pmd_locked(vma, pmd, haddr, freeze);
 out:
 	spin_unlock(ptl);
-	if (do_unlock_page) || (!was_locked && page)
+	if ((do_unlock_page) || (!was_locked && page))
 		unlock_page(page);
 	mmu_notifier_invalidate_range_end(mm, haddr, haddr + HPAGE_PMD_SIZE);
 }
@@ -2327,7 +2327,7 @@ static void unmap_page(struct page *page)
 	if (PageAnon(page))
 		ttu_flags |= TTU_SPLIT_FREEZE;
 
-	try_to_unmap(page, ttu_flags);
+	try_to_unmap(page, ttu_flags, NULL);
 
 	VM_WARN_ON_ONCE_PAGE(page_mapped(page), page);
 }
