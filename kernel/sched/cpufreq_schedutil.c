@@ -122,6 +122,7 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	return delta_ns >= sg_policy->min_rate_limit_ns;
 }
 
+extern int kp_active_mode(void);
 static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 				     unsigned int next_freq)
 {
@@ -129,13 +130,16 @@ static bool sugov_up_down_rate_limit(struct sugov_policy *sg_policy, u64 time,
 
 	delta_ns = time - sg_policy->last_freq_update_time;
 
-	if (next_freq > sg_policy->next_freq &&
-	    delta_ns < sg_policy->up_rate_delay_ns)
-			return true;
-
 	if (next_freq < sg_policy->next_freq &&
 	    delta_ns < sg_policy->down_rate_delay_ns)
 			return true;
+
+	// Do not allow up rate limits on perf mode
+	if (kp_active_mode() != 3) {
+		if (next_freq > sg_policy->next_freq &&
+		    delta_ns < sg_policy->up_rate_delay_ns)
+				return true;
+	}
 
 	return false;
 }
