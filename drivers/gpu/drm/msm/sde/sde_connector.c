@@ -649,6 +649,7 @@ struct dsi_panel *sde_connector_panel(struct sde_connector *c_conn)
 }
 
 bool was_hbm;
+extern bool HBM_flag;
 static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 {
 	struct dsi_panel *panel;
@@ -669,7 +670,7 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 		blank = 1;
 		level = 5;
                 devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
-		if (panel->bl_config.bl_level > 1023)
+		if (panel->bl_config.bl_level > 1023 || HBM_flag == true)
 			was_hbm = true;
 		else
 			was_hbm = false;
