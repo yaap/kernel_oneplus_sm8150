@@ -394,6 +394,8 @@ struct touchpanel_data {
 	struct workqueue_struct *async_workqueue;
 	struct work_struct fw_update_work;	/*using for fw update */
 	struct wakeup_source source;
+	struct wakeup_source single_tap_pm;
+	struct delayed_work report_single_tap_work;
 
 	struct device *dev;	/*used for i2c->dev */
 	struct i2c_client *client;
