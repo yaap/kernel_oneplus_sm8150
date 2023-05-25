@@ -275,7 +275,8 @@ static void sdio_release_func(struct device *dev)
 	 */
         if (!(func->card->quirks & MMC_QUIRK_NONSTD_SDIO))
 #endif
-		sdio_free_func_cis(func);
+		if (!(func->card->quirks & MMC_QUIRK_NONSTD_SDIO))
+			sdio_free_func_cis(func);
 
 	/*
 	 * We have now removed the link to the tuples in the
