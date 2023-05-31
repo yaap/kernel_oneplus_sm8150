@@ -1915,13 +1915,13 @@ static enum compact_result __compact_finished(struct zone *zone,
 		bool can_steal;
 
 		/* Job done if page is free of the right migratetype */
-		if (!free_area_empty(area, migratetype))
+		if (!list_empty(&area->free_list[migratetype]))
 			return COMPACT_SUCCESS;
 
 #ifdef CONFIG_CMA
 		/* MIGRATE_MOVABLE can fallback on MIGRATE_CMA */
 		if (migratetype == MIGRATE_MOVABLE &&
-			!free_area_empty(area, MIGRATE_CMA))
+			!list_empty(&area->free_list[MIGRATE_CMA]))
 			return COMPACT_SUCCESS;
 #endif
 		/*
