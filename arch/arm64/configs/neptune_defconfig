@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 4.14.314 Kernel Configuration
+# Linux/arm64 4.14.315 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_64BIT=y
@@ -5356,6 +5356,7 @@ CONFIG_CRYPTO_XCBC=y
 #
 CONFIG_CRYPTO_CRC32C=y
 CONFIG_CRYPTO_CRC32=y
+CONFIG_CRYPTO_BLAKE2B=y
 # CONFIG_CRYPTO_CRCT10DIF is not set
 CONFIG_CRYPTO_GHASH=y
 # CONFIG_CRYPTO_POLY1305 is not set
