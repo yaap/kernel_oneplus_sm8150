@@ -169,7 +169,6 @@ static void rf_cable_work(struct work_struct *work)
 
 	if (rf_cable_data->rf_v3 != rf_cable_data->rf_v3_pre) {
 		modify_rf_cable_smem_info(rf_cable_data->rf_v3);
-		op_restart_modem();
 #ifdef SDX5X_RF_CABLE_UEVENT
 		cable_connect_state(rf_cable_data->rf_v3);
 #endif
@@ -234,11 +233,9 @@ static ssize_t rf_factory_mode_proc_write_func(struct file *file,
     if (!rf_cable_data->is_rf_factory_mode) {
         modify_rf_v2_info(0);
         pr_err("%s: Modem restart due to RF Factory Mode exit\n", enable, __func__);
-        op_restart_modem();
     } else {
         modify_rf_v2_info(2);
         pr_err("%s: Modem restart due to RF Factory Mode entry\n", enable, __func__);
-        op_restart_modem();
     }
     irq_cable_enable(1);
 
@@ -290,7 +287,6 @@ static ssize_t rf_cable_proc_write_func(struct file *file,
 
             modify_rf_cable_smem_info(1);
             if (!rf_cable_data->rf_v3_pre)
-                op_restart_modem();
             rf_cable_data->rf_v3_pre = 1;
         } else {
 
@@ -299,7 +295,6 @@ static ssize_t rf_cable_proc_write_func(struct file *file,
 
             modify_rf_cable_smem_info(rf_cable_data->rf_v3);
             if (rf_cable_data->rf_v3 != rf_cable_data->rf_v3_pre)
-                op_restart_modem();
             rf_cable_data->rf_v3_pre =
             gpio_get_value(rf_cable_data->cable_gpio_0) ||
             gpio_get_value(rf_cable_data->cable_gpio_1);
