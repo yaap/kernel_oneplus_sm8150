@@ -927,6 +927,7 @@ struct subsys_device *find_subsys_device(const char *str)
 EXPORT_SYMBOL(find_subsys_device);
 
 static int val;
+struct delayed_work	op_restart_modem_work;
 
 static ssize_t proc_restart_level_all_read(struct file *p_file,
 	char __user *puser_buf, size_t count, loff_t *p_offset)
@@ -952,6 +953,8 @@ static ssize_t proc_restart_level_all_write(struct file *p_file,
 	rc = kstrtoint(temp, 0, &val);
 	if (rc != 0)
 		return -EINVAL;
+
+	cancel_delayed_work_sync(&op_restart_modem_work);
 
 	if (!strncasecmp(&temp[0], "0", 1)) {
 		subsys = find_subsys_device("venus");
@@ -1066,6 +1069,46 @@ static void init_restart_level_all_node(void)
 }
 
 static int restart_level;/*system original val*/
+
+static void op_restart_modem_work_fun(struct work_struct *work)
+{
+	struct subsys_device *subsys = find_subsys_device("modem");
+
+	if (!subsys)
+		return;
+
+	subsys->restart_level = restart_level;
+	pr_err("%s:level=%d\n", __func__,subsys->restart_level);
+}
+
+int op_restart_modem_init(void)
+{
+	INIT_DELAYED_WORK(&op_restart_modem_work, op_restart_modem_work_fun);
+	return 0;
+}
+
+int op_restart_modem(void)
+{
+	struct subsys_device *subsys = find_subsys_device("modem");
+	if (get_oem_project() == 19861) {
+		pr_err("%s: Skip subsystem_restart(modem) for SDX55 platform\n",
+				__func__);
+		return 0;
+	}
+
+	if (!subsys)
+		return -ENODEV;
+	pr_err("%s:level=%d\n", __func__,subsys->restart_level);
+	restart_level = subsys->restart_level;
+	subsys->restart_level = RESET_SUBSYS_COUPLED;
+	if (subsystem_restart("modem") == -ENODEV)
+		pr_err("%s: SSR call failed\n", __func__);
+
+	schedule_delayed_work(&op_restart_modem_work,
+			msecs_to_jiffies(10*1000));
+	return 0;
+}
+EXPORT_SYMBOL(op_restart_modem);
 
 static int subsys_start(struct subsys_device *subsys)
 {
@@ -2236,6 +2279,7 @@ struct subsys_device *subsys_register(struct subsys_desc *desc)
 		if (ret < 0)
 			goto err_setup_irqs;
 	}
+	op_restart_modem_init();
 	return subsys;
 err_setup_irqs:
 	if (subsys->desc->edge)
