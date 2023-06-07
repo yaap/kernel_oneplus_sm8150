@@ -132,4 +132,5 @@ kernel/configs/android-*.cfg
 #
 Android.bp
 
+*.sh
 kernelzip/
