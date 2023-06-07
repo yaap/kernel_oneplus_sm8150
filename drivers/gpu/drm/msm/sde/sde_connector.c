@@ -20,6 +20,7 @@
 #include <linux/backlight.h>
 #include <linux/string.h>
 #include <linux/devfreq_boost.h>
+#include <linux/cpu_input_boost.h>
 #include <linux/msm_drm_notify.h>
 #include "dsi_drm.h"
 #include "dsi_display.h"

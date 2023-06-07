@@ -13,6 +13,7 @@
 #include <linux/delayacct.h>
 #include <linux/pid_namespace.h>
 #include <linux/cgroupstats.h>
+#include <linux/binfmts.h>
 #include <linux/devfreq_boost.h>
 #include <linux/cpu_input_boost.h>
 
