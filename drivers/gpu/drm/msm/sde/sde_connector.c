@@ -674,7 +674,10 @@ static void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 	if (status) {
 		blank = 1;
 		level = 5;
-                devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
+                cpu_input_boost_kick_max(1200, true);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200, true);
+
 		if (panel->bl_config.bl_level > 1023 || HBM_flag == true)
 			was_hbm = true;
 		else

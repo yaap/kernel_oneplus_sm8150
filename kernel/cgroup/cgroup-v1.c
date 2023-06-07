@@ -13,6 +13,8 @@
 #include <linux/delayacct.h>
 #include <linux/pid_namespace.h>
 #include <linux/cgroupstats.h>
+#include <linux/devfreq_boost.h>
+#include <linux/cpu_input_boost.h>
 
 #include <trace/events/cgroup.h>
 
@@ -553,6 +555,15 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
 		goto out_finish;
 
 	ret = cgroup_attach_task(cgrp, task, threadgroup);
+
+	/* This covers boosting for app launches and app transitions */
+	if (!ret && !threadgroup &&
+		!memcmp(of->kn->parent->name, "top-app", sizeof("top-app")) &&
+		task_is_zygote(task->parent)) {
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 100, false);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 100, false);
+		cpu_input_boost_kick_max(100, false);
+	}
 
 out_finish:
 	cgroup_procs_write_finish(task);

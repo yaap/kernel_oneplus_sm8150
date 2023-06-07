@@ -707,7 +707,6 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	__pm_wakeup_event(&fp_wakelock, 2000);
 	switch(event) {
 	case 1:
-	  devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 500);
 	  gf_dev->udfps_pressed = 1;
 	  msg = GF_NET_EVENT_TP_TOUCHDOWN;
           sendnlmsg(&msg);
