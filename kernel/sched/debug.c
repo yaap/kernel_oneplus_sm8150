@@ -60,10 +60,134 @@ static unsigned long nsec_low(unsigned long long nsec)
 
 #define SPLIT_NS(x) nsec_high(x), nsec_low(x)
 
+#define SCHED_FEAT(name, enabled)	\
+	#name ,
+
+static const char * const sched_feat_names[] = {
+#include "features.h"
+};
+
+#undef SCHED_FEAT
+
+static int sched_feat_show(struct seq_file *m, void *v)
+{
+	int i;
+
+	for (i = 0; i < __SCHED_FEAT_NR; i++) {
+		if (!(sysctl_sched_features & (1UL << i)))
+			seq_puts(m, "NO_");
+		seq_printf(m, "%s ", sched_feat_names[i]);
+	}
+	seq_puts(m, "\n");
+
+	return 0;
+}
+
+#ifdef HAVE_JUMP_LABEL
+
+#define jump_label_key__true  STATIC_KEY_INIT_TRUE
+#define jump_label_key__false STATIC_KEY_INIT_FALSE
+
+#define SCHED_FEAT(name, enabled)	\
+	jump_label_key__##enabled ,
+
+struct static_key sched_feat_keys[__SCHED_FEAT_NR] = {
+#include "features.h"
+};
+
+#undef SCHED_FEAT
+
+static void sched_feat_disable(int i)
+{
+	static_key_disable(&sched_feat_keys[i]);
+}
+
+static void sched_feat_enable(int i)
+{
+	static_key_enable(&sched_feat_keys[i]);
+}
+#else
+static void sched_feat_disable(int i) { };
+static void sched_feat_enable(int i) { };
+#endif /* HAVE_JUMP_LABEL */
+
+static int sched_feat_set(char *cmp)
+{
+	int i;
+	int neg = 0;
+
+	if (strncmp(cmp, "NO_", 3) == 0) {
+		neg = 1;
+		cmp += 3;
+	}
+
+	for (i = 0; i < __SCHED_FEAT_NR; i++) {
+		if (strcmp(cmp, sched_feat_names[i]) == 0) {
+			if (neg) {
+				sysctl_sched_features &= ~(1UL << i);
+				sched_feat_disable(i);
+			} else {
+				sysctl_sched_features |= (1UL << i);
+				sched_feat_enable(i);
+			}
+			break;
+		}
+	}
+
+	return i;
+}
+
+static ssize_t
+sched_feat_write(struct file *filp, const char __user *ubuf,
+		size_t cnt, loff_t *ppos)
+{
+	char buf[64];
+	char *cmp;
+	int i;
+	struct inode *inode;
+
+	if (cnt > 63)
+		cnt = 63;
+
+	if (copy_from_user(&buf, ubuf, cnt))
+		return -EFAULT;
+
+	buf[cnt] = 0;
+	cmp = strstrip(buf);
+
+	/* Ensure the static_key remains in a consistent state */
+	inode = file_inode(filp);
+	inode_lock(inode);
+	i = sched_feat_set(cmp);
+	inode_unlock(inode);
+	if (i == __SCHED_FEAT_NR)
+		return -EINVAL;
+
+	*ppos += cnt;
+
+	return cnt;
+}
+
+static int sched_feat_open(struct inode *inode, struct file *filp)
+{
+	return single_open(filp, sched_feat_show, NULL);
+}
+
+static const struct file_operations sched_feat_fops = {
+	.open		= sched_feat_open,
+	.write		= sched_feat_write,
+	.read		= seq_read,
+	.llseek		= seq_lseek,
+	.release	= single_release,
+};
+
 __read_mostly bool sched_debug_enabled;
 
 static __init int sched_init_debug(void)
 {
+	debugfs_create_file("sched_features", 0644, NULL, NULL,
+			&sched_feat_fops);
+
 	debugfs_create_bool("sched_debug", 0644, NULL,
 			&sched_debug_enabled);
 
@@ -412,7 +536,7 @@ static char *task_group_path(struct task_group *tg)
 static void
 print_task(struct seq_file *m, struct rq *rq, struct task_struct *p)
 {
-	if (task_current(rq, p))
+	if (rq->curr == p)
 		SEQ_printf(m, ">R");
 	else
 		SEQ_printf(m, " %c", task_state_to_char(p));
@@ -718,6 +842,7 @@ static void sched_debug_header(struct seq_file *m)
 	PN(sysctl_sched_min_granularity);
 	PN(sysctl_sched_wakeup_granularity);
 	P(sysctl_sched_child_runs_first);
+	P(sysctl_sched_features);
 #ifdef CONFIG_SCHED_WALT
 	P(sched_init_task_load_windows);
 	P(min_capacity);
@@ -861,8 +986,17 @@ void print_numa_stats(struct seq_file *m, int node, unsigned long tsf,
 static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 {
 #ifdef CONFIG_NUMA_BALANCING
+	struct mempolicy *pol;
+
 	if (p->mm)
 		P(mm->numa_scan_seq);
+
+	task_lock(p);
+	pol = p->mempolicy;
+	if (pol && !(pol->flags & MPOL_F_MORON))
+		pol = NULL;
+	mpol_get(pol);
+	task_unlock(p);
 
 	P(numa_pages_migrated);
 	P(numa_preferred_nid);
@@ -870,6 +1004,7 @@ static void sched_show_numa(struct task_struct *p, struct seq_file *m)
 	SEQ_printf(m, "current_node=%d, numa_group_id=%d\n",
 			task_node(p), task_numa_group_id(p));
 	show_numa_stats(p, m);
+	mpol_put(pol);
 #endif
 }
 
@@ -978,10 +1113,6 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
 		P(dl.runtime);
 		P(dl.deadline);
 	}
-#if defined(CONFIG_PREEMPT_COUNT) && defined(CONFIG_SMP)
-	P(migrate_disable);
-#endif
-	P(nr_cpus_allowed);
 #undef PN_SCHEDSTAT
 #undef PN
 #undef __PN

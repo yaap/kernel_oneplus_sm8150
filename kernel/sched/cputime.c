@@ -171,10 +171,10 @@ void account_guest_time(struct task_struct *p, u64 cputime)
 
 	/* Add guest time to cpustat. */
 	if (task_nice(p) > 0) {
-		task_group_account_field(p, CPUTIME_NICE, cputime);
+		cpustat[CPUTIME_NICE] += cputime;
 		cpustat[CPUTIME_GUEST_NICE] += cputime;
 	} else {
-		task_group_account_field(p, CPUTIME_USER, cputime);
+		cpustat[CPUTIME_USER] += cputime;
 		cpustat[CPUTIME_GUEST] += cputime;
 	}
 }
@@ -283,7 +283,8 @@ static inline u64 account_other_time(u64 max)
 {
 	u64 accounted;
 
-	lockdep_assert_irqs_disabled();
+	/* Shall be converted to a lockdep-enabled lightweight check */
+	WARN_ON_ONCE(!irqs_disabled());
 
 	accounted = steal_account_process_time(max);
 

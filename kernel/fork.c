@@ -573,8 +573,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
 #ifdef CONFIG_CC_STACKPROTECTOR
 	tsk->stack_canary = get_random_canary();
 #endif
-	if (orig->cpus_ptr == &orig->cpus_mask)
-		tsk->cpus_ptr = &tsk->cpus_mask;
+
 	/*
 	 * One for us, one for whoever does the "release_task()" (usually
 	 * parent)
@@ -2175,7 +2174,6 @@ bad_fork_cleanup_perf:
 	perf_event_free_task(p);
 bad_fork_cleanup_policy:
 	lockdep_free_task(p);
-	free_task_load_ptrs(p);
 #ifdef CONFIG_NUMA
 	mpol_put(p->mempolicy);
 bad_fork_cleanup_threadgroup_lock:
