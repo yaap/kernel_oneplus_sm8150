@@ -3157,6 +3157,7 @@ static void walt_tunables_fixup(void)
 	walt_init_window_dep();
 }
 
+extern int kp_active_mode(void);
 /*
  * Runs in hard-irq context. This should ideally run just after the latest
  * window roll-over.
@@ -3262,6 +3263,12 @@ void walt_irq_work(struct irq_work *irq_work)
 	 * change sched_ravg_window since all rq locks are acquired.
 	 */
 	if (!is_migration) {
+		//on kprofile performance mode, use 6ms ravg window
+		if (kp_active_mode() == 3 && sched_ravg_window == 12000000)
+			new_sched_ravg_window == 6000000;
+		else if (kp_active_mode() != 3 && sched_ravg_window == 6000000)
+			new_sched_ravg_window == 12000000;
+
 		if (sched_ravg_window != new_sched_ravg_window) {
 			printk_deferred("ALERT: changing window size from %u to %u at %lu\n",
 					sched_ravg_window,
