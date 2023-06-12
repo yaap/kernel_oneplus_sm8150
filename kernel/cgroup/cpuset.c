@@ -1855,43 +1855,6 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
 	return 0;
 }
 
-#if !defined(CONFIG_SCHED_TUNE)
-static u64 st_boost_read(struct cgroup_subsys_state *css,
-			     struct cftype *cft)
-{
-	if (!strlen(css->cgroup->kn->name))
-		return -EINVAL;
-
-	return cpu_uclamp_boost_read_u64_wrapper(css, cft);
-}
-
-static int st_boost_write(struct cgroup_subsys_state *css,
-		             struct cftype *cft, u64 boost)
-{
-	if (!strlen(css->cgroup->kn->name))
-		return -EINVAL;
-
-	return cpu_uclamp_boost_write_u64_wrapper(css, cft, boost);
-}
-
-static u64 st_prefer_idle_read(struct cgroup_subsys_state *css,
-			     struct cftype *cft)
-{
-	if (!strlen(css->cgroup->kn->name))
-		return -EINVAL;
-
-	return cpu_uclamp_ls_read_u64_wrapper(css, cft);
-}
-
-static int st_prefer_idle_write(struct cgroup_subsys_state *css,
-			     struct cftype *cft, u64 prefer_idle)
-{
-	if (!strlen(css->cgroup->kn->name))
-		return -EINVAL;
-
-	return cpu_uclamp_ls_write_u64_wrapper(css, cft, prefer_idle);
-}
-#endif
 
 /*
  * for the common functions, 'private' gives the type of file
@@ -1996,18 +1959,6 @@ static struct cftype files[] = {
 		.private = FILE_MEMORY_PRESSURE_ENABLED,
 	},
 
-#if !defined(CONFIG_SCHED_TUNE)
-	{
-		.name = "schedtune.boost",
-		.read_u64 = st_boost_read,
-		.write_u64 = st_boost_write,
-	},
-	{
-		.name = "schedtune.prefer_idle",
-		.read_u64 = st_prefer_idle_read,
-		.write_u64 = st_prefer_idle_write,
-	},
-#endif
 	{ }	/* terminate */
 };
 
