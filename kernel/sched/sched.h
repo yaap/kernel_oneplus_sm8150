@@ -2736,10 +2736,6 @@ static inline bool uclamp_boosted(struct task_struct *p)
 {
 	return false;
 }
-static inline bool uclamp_is_used(void)
-{
-	return false;
-}
 #endif /* CONFIG_UCLAMP_TASK */
 
 #ifdef CONFIG_UCLAMP_TASK_GROUP
