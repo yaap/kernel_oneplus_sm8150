@@ -1292,7 +1292,8 @@ static int smb5_usb_get_prop(struct power_supply *psy,
 		else
 			val->intval = 1;
 
-		if (chg->real_charger_type == POWER_SUPPLY_TYPE_UNKNOWN) {
+		if (chg->real_charger_type == POWER_SUPPLY_TYPE_UNKNOWN &&
+			!chg->pd_active) {
 			if (chg->dcin_uusb_over_gpio_en &&
 				gpio_is_valid(chg->dc_9v_gpio) &&
 				gpio_get_value(chg->dc_9v_gpio))
