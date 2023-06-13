@@ -2724,10 +2724,6 @@ unsigned long uclamp_rq_util_with(struct rq *rq, unsigned long util,
 {
 	return util;
 }
-static inline bool uclamp_boosted(struct task_struct *p)
-{
-	return false;
-}
 #endif /* CONFIG_UCLAMP_TASK */
 
 #ifdef CONFIG_UCLAMP_TASK_GROUP

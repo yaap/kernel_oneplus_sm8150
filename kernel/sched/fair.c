@@ -7485,6 +7485,7 @@ static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 	return (estimated_capacity <= capacity_curr_of(target_cpu));
 }
 
+#ifdef CONFIG_UCLAMP_TASK
 static unsigned int uclamp_task_util(struct task_struct *p)
 {
 	unsigned int min_util = uclamp_eff_value(p, UCLAMP_MIN);
@@ -7493,6 +7494,7 @@ static unsigned int uclamp_task_util(struct task_struct *p)
 
 	return clamp(est_util, min_util, max_util);
 }
+#endif
 
 static int start_cpu(struct task_struct *p, bool boosted,
 		     struct cpumask *rtg_target)
@@ -7650,7 +7652,11 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 			 * accounting. However, the blocked utilization may be zero.
 			 */
 			wake_util = cpu_util_without(i, p);
+#ifdef CONFIG_UCLAMP_TASK
 			new_util = wake_util + uclamp_task_util(p);
+#else
+			new_util = wake_util + task_util_est(p);
+#endif
 			spare_wake_cap = capacity_orig - wake_util;
 
 			if (spare_wake_cap > most_spare_wake_cap) {
@@ -7761,7 +7767,11 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 					continue;
 
 				/* Skip CPUs which do not fit task requirements */
+#ifdef CONFIG_UCLAMP_TASK
 				if (capacity_orig < uclamp_task_util(p))
+#else
+				if (capacity_orig < task_util_est(p))
+#endif
 					continue;
 
 				/*
@@ -8157,7 +8167,11 @@ static inline struct energy_env *get_eenv(struct task_struct *p, int prev_cpu)
 	 * during energy calculation, but unboosted task
 	 * util for group utilization calculations
 	 */
+#ifdef CONFIG_UCLAMP_TASK
 	eenv->util_delta = uclamp_task_util(p);
+#else
+	eenv->util_delta = task_util_est(p);
+#endif
 	eenv->util_delta_boosted = boosted_task_util(p);
 
 	cpumask_and(&cpumask_possible_cpus, &p->cpus_allowed, cpu_online_mask);
@@ -11043,7 +11057,7 @@ static int need_active_balance(struct lb_env *env)
 	return unlikely(sd->nr_balance_failed > sd->cache_nice_tries+2);
 }
 
-static int group_balance_cpu_not_isolated(struct sched_group *sg)
+static int __maybe_unused group_balance_cpu_not_isolated(struct sched_group *sg)
 {
 	cpumask_t cpus;
 
