@@ -125,6 +125,7 @@ static inline void update_last_busy_time(int cpu, bool dequeue,
 		atomic64_set(&per_cpu(last_busy_time, cpu), curr_time);
 }
 
+#ifdef CONFIG_SCHED_WALT
 /**
  * sched_update_nr_prod
  * @cpu: The core id of the nr running driver.
@@ -178,13 +179,11 @@ unsigned int sched_get_cpu_util(int cpu)
 	util = rq->cfs.avg.util_avg;
 	capacity = capacity_orig_of(cpu);
 
-#ifdef CONFIG_SCHED_WALT
 	if (!walt_disabled && sysctl_sched_use_walt_cpu_util) {
 		util = rq->prev_runnable_sum + rq->grp_time.prev_runnable_sum;
 		util = div64_u64(util,
 				 sched_ravg_window >> SCHED_CAPACITY_SHIFT);
 	}
-#endif
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 
 	util = (util >= capacity) ? capacity : util;
@@ -196,3 +195,4 @@ u64 sched_get_cpu_last_busy_time(int cpu)
 {
 	return atomic64_read(&per_cpu(last_busy_time, cpu));
 }
+#endif
