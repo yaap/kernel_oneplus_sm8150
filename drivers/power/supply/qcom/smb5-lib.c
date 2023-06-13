@@ -1933,7 +1933,7 @@ static int smblib_awake_vote_callback(struct votable *votable, void *data,
 
 	pr_debug("set awake=%d\n", awake);
 	if (awake)
-		pm_wakeup_event(chg->dev, 500);
+		pm_stay_awake(chg->dev);
 	else
 		pm_relax(chg->dev);
 
