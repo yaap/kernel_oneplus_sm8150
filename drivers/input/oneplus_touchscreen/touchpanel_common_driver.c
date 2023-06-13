@@ -2897,7 +2897,7 @@ static int tp_register_irq_func(struct touchpanel_data *ts)
 
 	ts->pm_i2c_req.type = PM_QOS_REQ_AFFINE_IRQ;
 	ts->pm_i2c_req.irq = geni_i2c_get_adap_irq(ts->client);
-	irq_set_perf_affinity(ts->pm_i2c_req.irq, IRQF_PRIME_AFFINE);
+	irq_set_perf_affinity(ts->pm_i2c_req.irq, IRQF_PERF_AFFINE);
 	pm_qos_add_request(&ts->pm_i2c_req, PM_QOS_CPU_DMA_LATENCY,
 			   PM_QOS_DEFAULT_VALUE);
 
@@ -2913,7 +2913,7 @@ static int tp_register_irq_func(struct touchpanel_data *ts)
 		ret =
 		    request_threaded_irq(ts->irq, NULL, tp_irq_thread_fn,
 					 ts->irq_flags | IRQF_ONESHOT |
-					 IRQF_PRIME_AFFINE, TPD_DEVICE, ts);
+					 IRQF_PERF_AFFINE, TPD_DEVICE, ts);
 		if (ret < 0) {
 			TPD_INFO("%s request_threaded_irq ret is %d\n",
 				 __func__, ret);
