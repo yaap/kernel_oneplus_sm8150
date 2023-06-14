@@ -387,6 +387,13 @@ int __always_inline opticalfp_irq_handler(struct fp_underscreen_info* tp_info)
 	if (gf.spi == NULL) {
 		return 0;
 	}
+	gf_dev->gf_dev_req.type = PM_QOS_REQ_AFFINE_IRQ;
+	gf_dev->gf_dev_req.irq = gf_dev->irq;
+	irq_set_perf_affinity(gf_dev->irq, IRQF_PRIME_AFFINE);
+	pm_qos_add_request(&gf_dev->gf_dev_req, PM_QOS_CPU_DMA_LATENCY,
+		100);
+	pm_qos_update_request(&gf_dev->gf_dev_req, 100);
+	__pm_wakeup_event(&fp_wakelock, 2000);
 	fp_tpinfo = *tp_info;
 	switch(fp_tpinfo.touch_state) {
 	case 1:
@@ -402,6 +409,8 @@ int __always_inline opticalfp_irq_handler(struct fp_underscreen_info* tp_info)
 	  sendnlmsg_tp(&fp_tpinfo);
 	  break;
 	}
+	pm_qos_remove_request(&gf_dev->gf_dev_req);
+
 	return 0;
 }
 EXPORT_SYMBOL(opticalfp_irq_handler);
@@ -414,6 +423,11 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	if (gf.spi == NULL) {
 		return 0;
 	}
+	gf_dev->gf_dev_req.type = PM_QOS_REQ_AFFINE_IRQ;
+	gf_dev->gf_dev_req.irq = gf_dev->irq;
+	irq_set_perf_affinity(gf_dev->irq, IRQF_PRIME_AFFINE);
+	pm_qos_add_request(&gf_dev->gf_dev_req, PM_QOS_CPU_DMA_LATENCY,
+		100);
 	__pm_wakeup_event(&fp_wakelock, 2000);
 	switch(event) {
 	case 1:
@@ -427,6 +441,7 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	  sendnlmsg(&msgup);
 	  break;
 	}
+	pm_qos_remove_request(&gf_dev->gf_dev_req);
 
 	return 0;
 }
