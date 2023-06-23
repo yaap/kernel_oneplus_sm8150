@@ -1031,12 +1031,9 @@ u8 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 	dcalpha = panel->dc_dim_alpha;
 	mutex_unlock(&panel->panel_lock);
 
-	if (fodalpha < 210 && dcalpha > 0)
-		dcalpha = 285 - dcalpha;
-	else if (fodalpha >= 210 && dcalpha > 0)
-		dcalpha = 255 - dcalpha;
-
 	alpha = fodalpha + dcalpha;
+	if (alpha >= 255)
+		alpha = 248;
 
 	return alpha;
 }
