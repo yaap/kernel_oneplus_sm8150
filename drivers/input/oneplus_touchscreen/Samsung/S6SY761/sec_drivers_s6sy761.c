@@ -1127,7 +1127,7 @@ static fw_update_state sec_fw_update(void *chip_data, const struct firmware *fw,
 	return FW_UPDATE_SUCCESS;
 }
 
-static u8 sec_trigger_reason(void *chip_data, int gesture_enable,
+static inline u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 			     int is_suspended)
 {
 	int ret = 0;
@@ -1214,12 +1214,15 @@ static u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 
 		if ((p_event_status->stype == TYPE_STATUS_EVENT_VENDOR_INFO)
 		    && (p_event_status->status_id == SEC_STATUS_TOUCHHOLD)) {
-			if (p_event_status->status_data_1 == 1) {
+			switch (p_event_status->status_data_1) {
+			case 1:
 				g_tp->touchold_event = 1;
 				gf_opticalfp_irq_handler(1);
-			} else if (p_event_status->status_data_1 == 0) {
+				break;
+			case 0:
 				g_tp->touchold_event = 0;
 				gf_opticalfp_irq_handler(0);
+				break;
 			}
 			TPD_INFO("%s: touch_hold status %d\n", __func__,
 				 p_event_status->status_data_1);

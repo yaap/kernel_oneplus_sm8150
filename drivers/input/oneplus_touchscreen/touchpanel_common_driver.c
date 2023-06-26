@@ -131,7 +131,7 @@ static int __init get_cmdlinelcd_id(char *str)
 
 __setup("panel_type=", get_cmdlinelcd_id);
 
-int check_touchirq_triggerd(void)
+int inline check_touchirq_triggerd(void)
 {
 	int value;
 
@@ -157,7 +157,7 @@ int check_touchirq_triggerd(void)
  * switch work mode based on current params(gesture_enable, limit_enable, glove_enable)
  * Do not care the result: Return void type
  */
-static void operate_mode_switch(struct touchpanel_data *ts)
+static inline void operate_mode_switch(struct touchpanel_data *ts)
 {
 	if (!ts->ts_ops->mode_switch) {
 		TPD_INFO("not support ts_ops->mode_switch callback\n");
@@ -207,7 +207,7 @@ static void operate_mode_switch(struct touchpanel_data *ts)
 	}
 }
 
-static void tp_touch_down(struct touchpanel_data *ts, struct point_info points,
+static inline void tp_touch_down(struct touchpanel_data *ts, struct point_info points,
 			  int touch_report_num, int id)
 {
 	static int last_width_major;
@@ -259,7 +259,7 @@ static void tp_touch_down(struct touchpanel_data *ts, struct point_info points,
 #endif
 }
 
-static void tp_touch_up(struct touchpanel_data *ts)
+static inline void tp_touch_up(struct touchpanel_data *ts)
 {
 	if (ts->input_dev == NULL)
 		return;
@@ -305,7 +305,7 @@ static void tp_fw_auto_reset_handle(struct touchpanel_data *ts)
 	tp_touch_release(ts);
 }
 
-static void tp_geture_info_transform(struct gesture_info *gesture,
+static inline void tp_geture_info_transform(struct gesture_info *gesture,
 				     struct resolution_info *resolution_info)
 {
 	gesture->Point_start.x =
@@ -346,7 +346,7 @@ static void tp_geture_info_transform(struct gesture_info *gesture,
 	    (resolution_info->max_y);
 }
 
-static int sec_double_tap(struct gesture_info *gesture)
+static inline int sec_double_tap(struct gesture_info *gesture)
 {
 	uint32_t timeuse = 0;
 
@@ -382,7 +382,7 @@ static int sec_double_tap(struct gesture_info *gesture)
 
 }
 
-static void tp_gesture_handle(struct touchpanel_data *ts)
+static inline void tp_gesture_handle(struct touchpanel_data *ts)
 {
 	struct gesture_info gesture_info_temp;
 	bool enabled = false;
@@ -493,7 +493,7 @@ void tp_touch_btnkey_release(void)
 	tp_btnkey_release(ts);
 }
 
-static void tp_touch_release(struct touchpanel_data *ts)
+static inline void tp_touch_release(struct touchpanel_data *ts)
 {
 	int i = 0;
 
@@ -689,7 +689,7 @@ static void tp_btnkey_handle(struct touchpanel_data *ts)
 	input_sync(ts->kpd_input_dev);
 }
 
-static void tp_config_handle(struct touchpanel_data *ts)
+static inline void tp_config_handle(struct touchpanel_data *ts)
 {
 	if (!ts->ts_ops->fw_handle) {
 		TPD_INFO("not support ts->ts_ops->fw_handle callback\n");
@@ -699,7 +699,7 @@ static void tp_config_handle(struct touchpanel_data *ts)
 	ts->ts_ops->fw_handle(ts->chip_data);
 }
 
-static void tp_face_detect_handle(struct touchpanel_data *ts)
+static inline void tp_face_detect_handle(struct touchpanel_data *ts)
 {
 	int ps_state = 0;
 
@@ -715,7 +715,7 @@ static void tp_face_detect_handle(struct touchpanel_data *ts)
 	input_sync(ps_input_dev);
 }
 
-static void tp_async_work_callback(void)
+static inline void tp_async_work_callback(void)
 {
 	struct touchpanel_data *ts = g_tp;
 
@@ -748,7 +748,7 @@ static void tp_async_work_callback(void)
 	queue_work(ts->async_workqueue, &ts->async_work);
 }
 
-static void tp_async_work_lock(struct work_struct *work)
+static inline void tp_async_work_lock(struct work_struct *work)
 {
 	struct touchpanel_data *ts =
 	    container_of(work, struct touchpanel_data, async_work);
@@ -759,7 +759,7 @@ static void tp_async_work_lock(struct work_struct *work)
 	mutex_unlock(&ts->mutex);
 }
 
-static void tp_work_common_callback(void)
+static inline void tp_work_common_callback(void)
 {
 	struct touchpanel_data *ts;
 
@@ -769,7 +769,7 @@ static void tp_work_common_callback(void)
 	tp_work_func(ts);
 }
 
-static void tp_work_func(struct touchpanel_data *ts)
+static inline void tp_work_func(struct touchpanel_data *ts)
 {
 	u8 cur_event = 0;
 
@@ -987,7 +987,7 @@ static enum hrtimer_restart touchpanel_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 #else
-static irqreturn_t tp_irq_thread_fn(int irq, void *dev_id)
+static inline irqreturn_t tp_irq_thread_fn(int irq, void *dev_id)
 {
 	struct touchpanel_data *ts = (struct touchpanel_data *)dev_id;
 
@@ -1009,7 +1009,7 @@ static irqreturn_t tp_irq_thread_fn(int irq, void *dev_id)
  *    gesture_enable = 1 : enable gesture when ps is far away
  *    gesture_enable = 2 : disable gesture when ps is near
  */
-static ssize_t proc_gesture_control_write(struct file *file,
+static inline ssize_t proc_gesture_control_write(struct file *file,
 					  const char __user * buffer,
 					  size_t count, loff_t * ppos)
 {
@@ -1087,7 +1087,7 @@ static ssize_t proc_gesture_control_read(struct file *file,
 	return ret;
 }
 
-static ssize_t proc_coordinate_read(struct file *file, char __user * user_buf,
+static inline ssize_t proc_coordinate_read(struct file *file, char __user * user_buf,
 				    size_t count, loff_t * ppos)
 {
 	int ret = 0;

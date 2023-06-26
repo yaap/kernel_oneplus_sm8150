@@ -40,7 +40,7 @@ struct touchpanel_data *syna_tp;
 #define TPD_DETAIL(a, arg...)		pr_debug("[TP]"TPD_DEVICE ": " a, ##arg)
 
 /*******Part1:Call Back Function implement*******/
-static int tp_single_tap_en(struct chip_data_s3706 *ts, bool enable)
+static inline int tp_single_tap_en(struct chip_data_s3706 *ts, bool enable)
 {
 	uint8_t ret = 0;
 
@@ -320,7 +320,7 @@ static fw_check_state synaptics_fw_check(void *chip_data,
  * @enable: disable or enable control purpose.
  * Return  0: succeed, -1: failed.
  */
-static int synaptics_enable_interrupt(struct chip_data_s3706 *chip_info,
+static inline int synaptics_enable_interrupt(struct chip_data_s3706 *chip_info,
 				      bool enable)
 {
 	int ret;
@@ -358,7 +358,7 @@ static int synaptics_enable_interrupt(struct chip_data_s3706 *chip_info,
 	return 0;
 }
 
-static u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
+static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
 				   int is_suspended)
 {
 	int ret = 0;
@@ -395,12 +395,15 @@ static u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
 				return IRQ_EXCEPTION;
 			}
 			touchhold_flag = touchold_buffer[0];
-			if (touchhold_flag == 0x0f) {
+			switch (touchhold_flag) {
+			case 0x0f:
 				gf_opticalfp_irq_handler(1);
 				TPD_INFO("touchhold down\n");
-			} else if (touchhold_flag == 0x1f) {
+				break;
+			case  0x1f:
 				gf_opticalfp_irq_handler(0);
 				TPD_INFO("touchhold up\n");
+				break;
 			}
 		}
 	}
@@ -499,7 +502,7 @@ static int synaptics_configuration_init(struct chip_data_s3706 *chip_info,
 	return ret;
 }
 
-static int synaptics_enable_black_gesture(struct chip_data_s3706 *chip_info,
+static inline int synaptics_enable_black_gesture(struct chip_data_s3706 *chip_info,
 					  bool enable)
 {
 	int ret;
@@ -537,7 +540,7 @@ static int synaptics_enable_black_gesture(struct chip_data_s3706 *chip_info,
 	return 0;
 }
 
-static int synaptics_limit_switch_mode(struct chip_data_s3706 *chip_info,
+static inline int synaptics_limit_switch_mode(struct chip_data_s3706 *chip_info,
 				       bool enale)
 {
 	int ret = -1;
@@ -596,7 +599,7 @@ static int synaptics_limit_switch_mode(struct chip_data_s3706 *chip_info,
 	return ret;
 }
 
-static int synaptics_gesture_switch_mode(struct chip_data_s3706 *chip_info,
+static inline int synaptics_gesture_switch_mode(struct chip_data_s3706 *chip_info,
 					 bool enable)
 {
 	int tmp_mod;
@@ -759,7 +762,7 @@ static void synaptics_enable_charge_mode(struct chip_data_s3706 *chip_info,
 	}
 }
 
-static void synaptics_enable_game_mode(struct chip_data_s3706 *chip_info,
+static inline void synaptics_enable_game_mode(struct chip_data_s3706 *chip_info,
 				       bool enable)
 {
 	int ret = 0;
@@ -828,7 +831,7 @@ static void synaptics_enable_game_mode(struct chip_data_s3706 *chip_info,
 
 }
 
-static void synaptics_touchhold(struct chip_data_s3706 *chip_info, bool enable)
+static inline void synaptics_touchhold(struct chip_data_s3706 *chip_info, bool enable)
 {
 	int ret = -1;
 	int i = 0;
@@ -893,7 +896,7 @@ static void synaptics_touchhold(struct chip_data_s3706 *chip_info, bool enable)
 		 ret < 0 ? "failed" : "success");
 }
 
-static int synaptics_mode_switch(void *chip_data, work_mode mode, bool flag)
+static inline int synaptics_mode_switch(void *chip_data, work_mode mode, bool flag)
 {
 	int ret = -1;
 	struct chip_data_s3706 *chip_info = (struct chip_data_s3706 *)chip_data;
@@ -1000,7 +1003,7 @@ static int synaptics_mode_switch(void *chip_data, work_mode mode, bool flag)
 	return ret;
 }
 
-static int synaptics_get_gesture_info(void *chip_data,
+static inline int synaptics_get_gesture_info(void *chip_data,
 				      struct gesture_info *gesture)
 {
 	int ret = 0, i, gesture_sign, regswipe;
@@ -1061,16 +1064,14 @@ static int synaptics_get_gesture_info(void *chip_data,
 	case SINGLE_TAP:
 		gesture->gesture_type = SingleTap;
 		break;
-
 	case TOUCHHOLD_DOWN:
 		gf_opticalfp_irq_handler(1);
 		TPD_INFO("touchhold down\n");
-		return 0;
+		break;
 	case TOUCHHOLD_UP:
 		gf_opticalfp_irq_handler(0);
 		TPD_INFO("touchhold up\n");
-		return 0;
-
+		break;
 	default:
 		gesture->gesture_type = UnkownGesture;
 	}
