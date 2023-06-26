@@ -84,7 +84,6 @@ static int fb_notifier_callback(struct notifier_block *self,
 #endif
 
 static void tp_touch_release(struct touchpanel_data *ts);
-static void tp_btnkey_release(struct touchpanel_data *ts);
 static void tp_fw_update_work(struct work_struct *work);
 static void tp_work_func(struct touchpanel_data *ts);
 static void input_report_key_reduce(struct input_dev *dev,
@@ -281,7 +280,6 @@ static void tp_exception_handle(struct touchpanel_data *ts)
 	ts->ts_ops->reset(ts->chip_data);	// after reset, all registers set to default
 	operate_mode_switch(ts);
 
-	tp_btnkey_release(ts);
 	tp_touch_release(ts);
 }
 
@@ -301,7 +299,6 @@ static void tp_fw_auto_reset_handle(struct touchpanel_data *ts)
 
 	operate_mode_switch(ts);
 
-	tp_btnkey_release(ts);
 	tp_touch_release(ts);
 }
 
@@ -490,7 +487,6 @@ void tp_touch_btnkey_release(void)
 	}
 
 	tp_touch_release(ts);
-	tp_btnkey_release(ts);
 }
 
 static inline void tp_touch_release(struct touchpanel_data *ts)
@@ -649,46 +645,6 @@ static void tp_touch_handle(struct touchpanel_data *ts)
 	ts->touch_count = finger_num;
 }
 
-static void tp_btnkey_release(struct touchpanel_data *ts)
-{
-	if (CHK_BIT(ts->vk_bitmap, BIT_MENU))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_MENU, 0);
-	if (CHK_BIT(ts->vk_bitmap, BIT_HOME))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_HOMEPAGE, 0);
-	if (CHK_BIT(ts->vk_bitmap, BIT_BACK))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_BACK, 0);
-	input_sync(ts->kpd_input_dev);
-}
-
-static void tp_btnkey_handle(struct touchpanel_data *ts)
-{
-	u8 touch_state = 0;
-
-	if (ts->vk_type != TYPE_AREA_SEPRATE) {
-		TPD_DEBUG
-		    ("TP vk_type not proper, checktouchpanel, button-type\n");
-
-		return;
-	}
-	if (!ts->ts_ops->get_keycode) {
-		TPD_INFO("not support ts->ts_ops->get_keycode callback\n");
-
-		return;
-	}
-	touch_state = ts->ts_ops->get_keycode(ts->chip_data);
-
-	if (CHK_BIT(ts->vk_bitmap, BIT_MENU))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_MENU,
-					CHK_BIT(touch_state, BIT_MENU));
-	if (CHK_BIT(ts->vk_bitmap, BIT_HOME))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_HOMEPAGE,
-					CHK_BIT(touch_state, BIT_HOME));
-	if (CHK_BIT(ts->vk_bitmap, BIT_BACK))
-		input_report_key_reduce(ts->kpd_input_dev, KEY_BACK,
-					CHK_BIT(touch_state, BIT_BACK));
-	input_sync(ts->kpd_input_dev);
-}
-
 static inline void tp_config_handle(struct touchpanel_data *ts)
 {
 	if (!ts->ts_ops->fw_handle) {
@@ -792,9 +748,6 @@ static inline void tp_work_func(struct touchpanel_data *ts)
 				       ts->is_suspended);
 	if (CHK_BIT(cur_event, IRQ_TOUCH) || CHK_BIT(cur_event, IRQ_BTN_KEY)
 	    || CHK_BIT(cur_event, IRQ_FACE_STATE)) {
-		if (CHK_BIT(cur_event, IRQ_BTN_KEY)) {
-			tp_btnkey_handle(ts);
-		}
 		if (CHK_BIT(cur_event, IRQ_TOUCH)) {
 			tp_touch_handle(ts);
 		}
@@ -949,7 +902,6 @@ static void tp_fw_update_work(struct work_struct *work)
 	}
 
 	tp_touch_release(ts);
-	tp_btnkey_release(ts);
 	operate_mode_switch(ts);
 
  EXIT:
@@ -3367,8 +3319,7 @@ static int tp_suspend(struct device *dev)
 		goto EXIT;
 	}
 
-	//step3:Release key && touch event before suspend
-	tp_btnkey_release(ts);
+	//step3:release touch event before suspend
 	tp_touch_release(ts);
 
 	//step5:ear sense support
@@ -3466,7 +3417,6 @@ static void __always_inline speedup_resume(struct work_struct *work)
 	//step1: get mutex for locking i2c acess flow
 	mutex_lock(&ts->mutex);
 
-	tp_btnkey_release(ts);
 	tp_touch_release(ts);
 
 	if (ts->int_mode == UNBANNABLE) {
