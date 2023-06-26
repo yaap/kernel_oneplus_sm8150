@@ -86,8 +86,6 @@ static int fb_notifier_callback(struct notifier_block *self,
 static void tp_touch_release(struct touchpanel_data *ts);
 static void tp_fw_update_work(struct work_struct *work);
 static void tp_work_func(struct touchpanel_data *ts);
-static void input_report_key_reduce(struct input_dev *dev,
-				unsigned int code, int value);
 __attribute__ ((weak))
 int request_firmware_select(const struct firmware **firmware_p,
 			    const char *name, struct device *device)
@@ -3648,27 +3646,4 @@ int common_touch_data_free(struct touchpanel_data *pdata)
 
 	g_tp = NULL;
 	return 0;
-}
-
-/**
- * input_report_key_reduce - Using for report virtual key
- * @work: work struct using for this thread
- *
- * before report virtual key, detect whether touch_area has been touched
- * Do not care the result: Return void type
- */
-static void input_report_key_reduce(struct input_dev *dev,
-				unsigned int code, int value)
-{
-	if (value) {		//report Key[down]
-		if (g_tp) {
-			if (g_tp->view_area_touched == 0) {
-				input_report_key(dev, code, value);
-			} else
-				TPD_INFO
-				    ("Sorry,tp is touch down,can not report touch key\n");
-		}
-	} else {
-		input_report_key(dev, code, value);
-	}
 }
