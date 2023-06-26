@@ -161,10 +161,14 @@ static inline bool use_pelt(void)
 #endif
 }
 
+extern int kp_active_mode(void);
 static inline bool conservative_pl(void)
 {
 #ifdef CONFIG_SCHED_WALT
-	return sysctl_sched_conservative_pl;
+	if (kp_active_mode() == 1)
+		return 1;
+	else
+		return sysctl_sched_conservative_pl;
 #else
 	return false;
 #endif
