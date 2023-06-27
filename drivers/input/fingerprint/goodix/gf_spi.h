@@ -14,7 +14,6 @@
 #include <linux/gpio.h>
 #include <linux/types.h>
 #include <linux/notifier.h>
-#include <linux/pm_qos.h>
 /**********************************************************/
 enum FP_MODE{
 	GF_IMAGE_MODE = 0,
@@ -144,8 +143,6 @@ struct gf_dev {
 	int irq;
 	int irq_enabled;
 	int clk_enabled;
-
-	struct pm_qos_request gf_dev_req;
 
 	struct regulator *vdd_3v2;
 	int regulator_vdd_vmin;
