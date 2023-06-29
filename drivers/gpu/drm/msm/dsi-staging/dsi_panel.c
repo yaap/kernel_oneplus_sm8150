@@ -1029,9 +1029,10 @@ u8 dsi_panel_get_fod_dim_alpha(struct dsi_panel *panel)
 	fodalpha = panel->fod_dim_alpha;
 	dcalpha = panel->dc_dim_alpha;
 
-	alpha = fodalpha + dcalpha;
-	if (alpha >= 255)
-		alpha = 248;
+	if (dcalpha)
+		alpha = dcalpha;
+	else
+		alpha = fodalpha;
 
 	return alpha;
 }
