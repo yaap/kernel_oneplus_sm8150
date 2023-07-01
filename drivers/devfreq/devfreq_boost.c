@@ -90,7 +90,7 @@ static void __devfreq_boost_kick_max(struct boost_dev *b,
 	unsigned long curr_expires, new_expires;
 
 	if (!READ_ONCE(b->df) || !test_bit(SCREEN_ON, &b->state) || 
-		(kp_active_mode() != 3 && !always))
+		(kp_active_mode() == 1 && !always))
 		return;
 
 	do {

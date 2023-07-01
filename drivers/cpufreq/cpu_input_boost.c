@@ -88,6 +88,7 @@ static struct boost_drv boost_drv_g __read_mostly = {
 	.boost_waitq = __WAIT_QUEUE_HEAD_INITIALIZER(boost_drv_g.boost_waitq)
 };
 
+extern int kp_active_mode(void);
 static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
@@ -159,7 +160,6 @@ static void update_online_cpu_policy(void)
 	put_online_cpus();
 }
 
-extern int kp_active_mode(void);
 static void __cpu_input_boost_kick(struct boost_drv *b)
 {
 	unsigned int multi = 1;
@@ -170,7 +170,7 @@ static void __cpu_input_boost_kick(struct boost_drv *b)
 	if (!input_boost_duration)
 		return;
 
-	if (kp_active_mode() != 3)
+	if (kp_active_mode() == 1)
 		return;
 
 	set_bit(INPUT_BOOST, &b->state);
@@ -196,7 +196,7 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 	if (!test_bit(SCREEN_ON, &b->state))
 		return;
 
-	if (kp_active_mode() != 3 && !always)
+	if (kp_active_mode() == 1 && !always)
 		return;
 
 	do {
