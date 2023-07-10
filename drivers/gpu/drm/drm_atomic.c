@@ -31,7 +31,6 @@
 #include <drm/drm_mode.h>
 #include <drm/drm_print.h>
 #include <linux/devfreq_boost.h>
-#include <linux/cpu_input_boost.h>
 #include <linux/pm_qos.h>
 #include <linux/sync_file.h>
 
@@ -2264,8 +2263,8 @@ static int __drm_mode_atomic_ioctl(struct drm_device *dev, void *data,
 
 #ifdef CONFIG_CPU_INPUT_BOOST
 	if (!(arg->flags & DRM_MODE_ATOMIC_TEST_ONLY)) {
-		//7000ms covers long scrolls after input boosting is no longer used
-		if (time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
+		//5000ms covers long scrolls after input boosting is no longer used
+		if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
 			devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
 			devfreq_boost_kick(DEVFREQ_MSM_LLCCBW);
 		}

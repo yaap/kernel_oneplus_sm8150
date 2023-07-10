@@ -14,7 +14,7 @@ enum df_device {
 };
 
 #ifdef CONFIG_DEVFREQ_BOOST
-#ifndef CONFIG_CPU_INPUT_BOOST
+#if(CONFIG_INPUT_BOOST_DURATION_MS == 0)
 extern unsigned long last_input_time;
 #endif
 void devfreq_boost_kick(enum df_device device);
