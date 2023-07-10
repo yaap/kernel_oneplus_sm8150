@@ -2415,8 +2415,7 @@ static void init_parse_dts(struct device *dev, struct touchpanel_data *ts)
 	    of_property_read_bool(np, "black_gesture_support");
 	ts->fw_update_app_support =
 	    of_property_read_bool(np, "fw_update_app_support");
-	ts->game_switch_support =
-	    of_property_read_bool(np, "game_switch_support");
+	ts->game_switch_support = true;
 	ts->is_noflash_ic = of_property_read_bool(np, "noflash_support");
 	ts->face_detect_support =
 	    of_property_read_bool(np, "face_detect_support");
