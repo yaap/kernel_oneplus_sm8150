@@ -76,39 +76,39 @@ static inline void sendnlmsg(char *msg)
 {
 	struct sk_buff *skb_1;
 	struct nlmsghdr *nlh;
-	int len = NLMSG_SPACE(MAX_MSGSIZE);
+	int len = sizeof(char);
 	int ret = 0;
 	if (!msg || !gf_nl_sk || !pid) {
 		return ;
 	}
-	skb_1 = alloc_skb(len, GFP_KERNEL);
+	skb_1 = alloc_skb(len, GFP_KERNEL | GFP_DMA);
 	if (!skb_1) {
 		return;
 	}
-	nlh = nlmsg_put(skb_1, 0, 0, 0, MAX_MSGSIZE, 0);
+	nlh = nlmsg_put(skb_1, 0, 0, 0, len, 0);
 	NETLINK_CB(skb_1).portid = 0;
 	NETLINK_CB(skb_1).dst_group = 0;
-	memcpy(NLMSG_DATA(nlh), msg, sizeof(char));
-	ret = netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT);
+	memcpy(NLMSG_DATA(nlh), msg, len);
+	ret = netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
 }
 
-static inline void sendnlmsg_tp(struct fp_underscreen_info *msg, int length)
+static inline void sendnlmsg_tp(struct fp_underscreen_info *msg)
 {
 	struct sk_buff *skb_1;
 	struct nlmsghdr *nlh;
-	int len = NLMSG_SPACE(MAX_MSGSIZE);
+	int len = sizeof(msg);
 	int ret = 0;
 	if (!msg || !gf_nl_sk || !pid) {
 		return ;
 	}
-	skb_1 = alloc_skb(len, GFP_KERNEL);
+	skb_1 = alloc_skb(len, GFP_KERNEL | GFP_DMA);
 	if (!skb_1) {
 		return;
 	}
-	nlh = nlmsg_put(skb_1, 0, 0, 0, length, 0);
+	nlh = nlmsg_put(skb_1, 0, 0, 0, len, 0);
 	NETLINK_CB(skb_1).portid = 0;
 	NETLINK_CB(skb_1).dst_group = 0;
-	memcpy(NLMSG_DATA(nlh), msg, length);//core
+	memcpy(NLMSG_DATA(nlh), msg, len);//core
 	ret = netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
 }
 
@@ -350,12 +350,10 @@ static inline int gf_open(struct inode *inode, struct file *filp)
 	}
 
 	if (status == 0) {
-		if (status == 0) {
 			gf_dev->users++;
 			filp->private_data = gf_dev;
 			nonseekable_open(inode, filp);
 			gf_dev->device_available = 1;
-		}
 	}
 	mutex_unlock(&device_list_lock);
 	return status;
@@ -426,11 +424,11 @@ int __always_inline opticalfp_irq_handler(struct fp_underscreen_info* tp_info)
 	switch(fp_tpinfo.touch_state) {
 	case 1:
 	  fp_tpinfo.touch_state = GF_NET_EVENT_TP_TOUCHDOWN;
-	  sendnlmsg_tp(&fp_tpinfo,sizeof(fp_tpinfo));
+	  sendnlmsg_tp(&fp_tpinfo);
 	  break;
 	case 0:
 	  fp_tpinfo.touch_state = GF_NET_EVENT_TP_TOUCHUP;
-	  sendnlmsg_tp(&fp_tpinfo,sizeof(fp_tpinfo));
+	  sendnlmsg_tp(&fp_tpinfo);
 	  break;
 	}
 	return 0;
