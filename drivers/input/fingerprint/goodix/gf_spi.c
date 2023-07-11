@@ -307,16 +307,6 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	case GF_IOC_RESET:
 		gf_hw_reset(gf_dev, 0);
 		break;
-	case GF_IOC_ENABLE_POWER:
-		if (gf_dev->device_available == 0)
-			gf_power_on(gf_dev);
-		gf_dev->device_available = 1;
-		break;
-	case GF_IOC_DISABLE_POWER:
-		if (gf_dev->device_available == 1)
-			gf_power_off(gf_dev);
-		gf_dev->device_available = 0;
-		break;
 	case GF_IOC_ENTER_SLEEP_MODE:
 		break;
 	case GF_IOC_GET_FW_INFO:
@@ -545,7 +535,7 @@ static int gf_probe(struct platform_device *pdev)
 	gf_dev->irq_gpio = -EINVAL;
 	gf_dev->reset_gpio = -EINVAL;
 	gf_dev->pwr_gpio = -EINVAL;
-	gf_dev->device_available = 0;
+	gf_dev->device_available = 1;
 	gf_dev->fb_black = 0;
 
 	/* If we can allocate a minor number, hook up this device.
