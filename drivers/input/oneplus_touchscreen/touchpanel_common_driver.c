@@ -392,7 +392,7 @@ static void tp_gesture_report_single_tap(struct work_struct *work)
 {
 	struct touchpanel_data *ts = container_of(work, struct touchpanel_data, report_single_tap_work.work);
 
-	tp_report_key(ts, KEY_GESTURE_SINGLE_TAP);
+	sysfs_notify(&ts->client->dev.kobj, NULL, "single_tap_pressed");
 	__pm_relax(&ts->single_tap_pm);
 }
 
@@ -497,6 +497,16 @@ static inline ssize_t double_tap_pressed_get(struct device *device,
 }
 
 static DEVICE_ATTR(double_tap_pressed, S_IRUGO, double_tap_pressed_get, NULL);
+
+static inline ssize_t single_tap_pressed_get(struct device *device,
+				struct device_attribute *attribute,
+				char *buffer)
+{
+	struct touchpanel_data *ts = dev_get_drvdata(device);
+	return scnprintf(buffer, PAGE_SIZE, "%d\n", ts->gesture.gesture_type == SingleTap);
+}
+
+static DEVICE_ATTR(single_tap_pressed, S_IRUGO, single_tap_pressed_get, NULL);
 
 void tp_touch_btnkey_release(void)
 {
@@ -2044,7 +2054,6 @@ static DEVICE_ATTR(tp_fw_update, 0644, sec_update_fw_show, sec_update_fw_store);
 	    .owner = THIS_MODULE, \
 	};
 
-GESTURE_ATTR(single_tap, SingleTap_enable);
 GESTURE_ATTR(down_arrow, UpVee_enable);
 GESTURE_ATTR(left_arrow, LeftVee_enable);
 GESTURE_ATTR(right_arrow, RightVee_enable);
@@ -2079,12 +2088,17 @@ static int init_touchpanel_proc(struct touchpanel_data *ts)
 	}
 
 	if (device_create_file(&ts->client->dev, &dev_attr_tp_fw_update)) {
-		TPD_INFO("driver_create_file failt\n");
+		TPD_INFO("driver_create_file failed\n");
 		ret = -ENOMEM;
 	}
 
 	if (device_create_file(&ts->client->dev, &dev_attr_double_tap_pressed)) {
-		TPD_INFO("driver_create_file failt\n");
+		TPD_INFO("driver_create_file failed\n");
+		ret = -ENOMEM;
+	}
+
+	if (device_create_file(&ts->client->dev, &dev_attr_single_tap_pressed)) {
+		TPD_INFO("driver_create_file failed\n");
 		ret = -ENOMEM;
 	}
 	//proc files-step2:/proc/touchpanel
@@ -2112,7 +2126,6 @@ static int init_touchpanel_proc(struct touchpanel_data *ts)
 			TPD_INFO("%s: Couldn't create proc entry, %d\n",
 				 __func__, __LINE__);
 		}
-        	CREATE_GESTURE_NODE(single_tap);
         	CREATE_GESTURE_NODE(down_arrow);
         	CREATE_GESTURE_NODE(left_arrow);
         	CREATE_GESTURE_NODE(right_arrow);
@@ -2335,7 +2348,6 @@ static int init_input_device(struct touchpanel_data *ts)
 		set_bit(KEY_GESTURE_DOWN_ARROW, ts->input_dev->keybit);
 		set_bit(KEY_GESTURE_LEFT_ARROW, ts->input_dev->keybit);
 		set_bit(KEY_GESTURE_RIGHT_ARROW, ts->input_dev->keybit);
-		set_bit(KEY_GESTURE_SINGLE_TAP, ts->input_dev->keybit);
 	}
 
 	ts->kpd_input_dev->name = TPD_DEVICE "_kpd";
