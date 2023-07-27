@@ -32,6 +32,8 @@
 #include <linux/delay.h>
 
 #include <linux/kthread.h>
+#include <linux/cpu_input_boost.h>
+#include <linux/devfreq_boost.h>
 
 #include <asm/switch_to.h>
 #include <linux/msm_rtb.h>
@@ -970,12 +972,14 @@ static void uclamp_sync_util_min_rt_default(void)
 	rcu_read_unlock();
 }
 
+extern int kp_active_mode(void);
 static inline struct uclamp_se
 uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 {
 	/* Copy by value as we could modify it */
 	struct uclamp_se uc_req = p->uclamp_req[clamp_id];
 #ifdef CONFIG_UCLAMP_TASK_GROUP
+	struct cgroup_subsys_state *css;
 	unsigned int tg_min, tg_max, value;
 
 	/*
@@ -987,7 +991,29 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	if (task_group(p) == &root_task_group)
 		return uc_req;
 
-	tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
+	if (kp_active_mode() != 1) {
+		css = task_css(p, cpu_cgrp_id);
+		if (strcmp(css->cgroup->kn->name, "top-app") == 0
+			&& time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+			if (time_before(jiffies, last_input_time + msecs_to_jiffies(500)))
+				tg_min = 612;
+			else
+				tg_min = 410;
+		} else if (strcmp(css->cgroup->kn->name, "foreground") == 0
+			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(5000))) {
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(100)))
+				tg_min = 505;
+			else if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1000)))
+				tg_min = 307;
+			else
+				tg_min = 159;
+		} else {
+			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
+		}
+	} else {
+		tg_min = 0;
+	}
+
 	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
 	value = uc_req.value;
 	value = clamp(value, tg_min, tg_max);
