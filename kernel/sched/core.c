@@ -1009,9 +1009,6 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0
 			&& time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
 			tg_min = 612;
-		} else if (strcmp(css->cgroup->kn->name, "nnapi-hal") == 0
-			&& time_before(jiffies, last_neural_time + msecs_to_jiffies(2000))) {
-			tg_min = 650;
 		} else {
 			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 		}
