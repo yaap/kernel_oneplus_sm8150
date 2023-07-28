@@ -17,6 +17,7 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
+#include <linux/event_tracking.h>
 #include <linux/slab.h>
 #include <linux/radix-tree.h>
 #include <linux/err.h>
@@ -29,6 +30,8 @@
 #include <linux/pinctrl/pinmux.h>
 #include "core.h"
 #include "pinmux.h"
+
+unsigned long last_cam_time;
 
 int pinmux_check_ops(struct pinctrl_dev *pctldev)
 {
@@ -95,6 +98,9 @@ static int pin_request(struct pinctrl_dev *pctldev,
 			pin);
 		goto out;
 	}
+
+	if (strstr(owner, "cam-sensor"))
+		last_cam_time = jiffies;
 
 	dev_dbg(pctldev->dev, "request pin %d (%s) for %s\n",
 		pin, desc->name, owner);
