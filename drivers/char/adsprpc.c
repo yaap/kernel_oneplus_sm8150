@@ -47,6 +47,7 @@
 #include <soc/qcom/ramdump.h>
 #include <linux/debugfs.h>
 #include <linux/stat.h>
+#include <linux/event_tracking.h>
 
 #define TZ_PIL_PROTECT_MEM_SUBSYS_ID 0x0C
 #define TZ_PIL_CLEAR_PROTECT_MEM_SUBSYS_ID 0x0D
@@ -134,6 +135,8 @@ static int fastrpc_pdr_notifier_cb(struct notifier_block *nb,
 					void *data);
 static struct dentry *debugfs_root;
 static struct dentry *debugfs_global_file;
+
+unsigned long last_neural_time;
 
 static inline uint64_t buf_page_start(uint64_t buf)
 {
@@ -2434,6 +2437,9 @@ static int fastrpc_get_info_from_dsp(struct fastrpc_file *fl,
 		break;
 	}
 	dsp_attr_buf[0] = dsp_support;
+
+	if (strstr(current->comm, "neural"))
+		last_neural_time = jiffies;
 
 	if (dsp_support == 0) {
 		err = -ENOTCONN;
