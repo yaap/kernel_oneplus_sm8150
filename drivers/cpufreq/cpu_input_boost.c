@@ -13,6 +13,7 @@
 #include <linux/msm_drm_notify.h>
 #include <linux/slab.h>
 #include <linux/version.h>
+#include <linux/event_tracking.h>
 
 /* The sched_param struct is located elsewhere in newer kernels */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0)
