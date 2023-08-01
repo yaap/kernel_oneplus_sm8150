@@ -1002,6 +1002,7 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(5000))) {
 			if (time_before(jiffies, last_fod_time + msecs_to_jiffies(300))) {
 				tg_min = 675;
+				tg_max = 1024;
 				task_group(p)->latency_sensitive = 1;
 			} else {
 				tg_min = 505;
@@ -1024,7 +1025,9 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 		tg_min = 0;
 	}
 
-	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
+	if (!tg_max)
+		tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
+
 	value = uc_req.value;
 	value = clamp(value, tg_min, tg_max);
 	uclamp_se_set(&uc_req, value, false);
