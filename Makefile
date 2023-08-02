@@ -703,6 +703,7 @@ export LLVM_AR LLVM_NM
 LDFLAGS		+= -O3
 LDFLAGS		+= --plugin-opt=O3
 LDFLAGS		+= --lto-O3
+LDFLAGS		+= --plugin-opt=-import-instr-limit=40
 endif
 
 # The arch Makefile can set ARCH_{CPP,A,C}FLAGS to override the default
