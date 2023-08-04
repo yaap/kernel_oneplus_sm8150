@@ -999,32 +999,25 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 			else
 				tg_min = 410;
 		} else if (strcmp(css->cgroup->kn->name, "foreground") == 0
-			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(5000))) {
-			if (time_before(jiffies, last_fod_time + msecs_to_jiffies(300))) {
+			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(2000))) {
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(750))) {
 				tg_min = 675;
 				tg_max = 1024;
 				task_group(p)->latency_sensitive = 1;
 			} else {
 				tg_min = 505;
+				tg_max = 785;
 				task_group(p)->latency_sensitive = 0;
 			}
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(300))
-				&& (!time_before(jiffies, last_fod_time + msecs_to_jiffies(300))))
-				tg_min = 505;
-			else if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1000)))
-				tg_min = 307;
-			else
-				tg_min = 159;
 		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0
 			&& time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
 			tg_min = 612;
-		} else {
-			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 		}
+		if (!tg_min)
+			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 	} else {
 		tg_min = 0;
 	}
-
 	if (!tg_max)
 		tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
 
