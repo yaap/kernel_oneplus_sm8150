@@ -2870,17 +2870,6 @@ static int tp_register_irq_func(struct touchpanel_data *ts)
 {
 	int ret = 0;
 
-	ts->pm_i2c_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_i2c_req.irq = geni_i2c_get_adap_irq(ts->client);
-	irq_set_perf_affinity(ts->pm_i2c_req.irq, IRQF_PRIME_AFFINE);
-	pm_qos_add_request(&ts->pm_i2c_req, PM_QOS_CPU_DMA_LATENCY,
-			   PM_QOS_DEFAULT_VALUE);
-
-	ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_touch_req.irq = ts->irq;
-	pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
-			   PM_QOS_DEFAULT_VALUE);
-
 #ifdef TPD_USE_EINT
 	if (gpio_is_valid(ts->hw_res.irq_gpio)) {
 		TPD_DEBUG("%s, irq_gpio is %d, ts->irq is %d\n", __func__,
@@ -2911,13 +2900,6 @@ err_irq:
 	pm_qos_remove_request(&ts->pm_i2c_req);
 
 	return ret;
-}
-
-static void tp_unregister_irq_func(struct touchpanel_data *ts)
-{
-	pm_qos_remove_request(&ts->pm_touch_req);
-	pm_qos_remove_request(&ts->pm_i2c_req);
-	free_irq(ts->irq, ts);
 }
 
 static void tp_util_get_vendor(struct touchpanel_data *ts,
@@ -3241,7 +3223,7 @@ int register_common_touch_device(struct touchpanel_data *pdata)
 	return 0;
 
  threaded_irq_free:
-	tp_unregister_irq_func(ts);
+	free_irq(ts->irq, ts);
 
  manu_info_alloc_err:
 	kfree(ts->panel_data.manufacture_info.version);
@@ -3404,7 +3386,7 @@ static void tp_resume(struct device *dev)
 		goto NO_NEED_RESUME;
 
 	//free irq at first
-	tp_unregister_irq_func(ts);
+	free_irq(ts->irq, ts);
 
 	if (ts->ts_ops->reinit_device) {
 		ts->ts_ops->reinit_device(ts->chip_data);
