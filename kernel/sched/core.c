@@ -993,8 +993,15 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	if (kp_active_mode() != 1) {
 		css = task_css(p, cpu_cgrp_id);
 		if (strcmp(css->cgroup->kn->name, "top-app") == 0
-			&& time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+			&& time_before(jiffies, last_input_time + msecs_to_jiffies(5000))
+			&& kp_active_mode() != 3) {
 			if (time_before(jiffies, last_input_time + msecs_to_jiffies(500)))
+				tg_min = 612;
+			else
+				tg_min = 410;
+		} else if (strcmp(css->cgroup->kn->name, "top-app") == 0
+			&& kp_active_mode() == 3) {
+			if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
 				tg_min = 612;
 			else
 				tg_min = 410;
