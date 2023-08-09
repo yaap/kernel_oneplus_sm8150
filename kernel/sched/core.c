@@ -1006,7 +1006,7 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 			else
 				tg_min = 410;
 		} else if (strcmp(css->cgroup->kn->name, "foreground") == 0
-			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(2000))) {
+			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
 			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(750))) {
 				tg_min = 675;
 				tg_max = 1024;
@@ -1019,6 +1019,10 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0
 			&& time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
 			tg_min = 612;
+		} else if (strcmp(css->cgroup->kn->name, "system_background") == 0
+			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
+			tg_min = 205;
+			tg_max = 870;
 		}
 		if (!tg_min)
 			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
