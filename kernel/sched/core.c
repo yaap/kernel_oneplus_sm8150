@@ -1016,9 +1016,13 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 				tg_max = 785;
 				task_group(p)->latency_sensitive = 0;
 			}
-		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0
-			&& time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
-			tg_min = 612;
+		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0) {
+			if (time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
+				task_group(p)->latency_sensitive = 1;
+				tg_min = 612;
+			} else {
+				task_group(p)->latency_sensitive = 0;
+			}
 		} else if (strcmp(css->cgroup->kn->name, "system_background") == 0
 			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
 			tg_min = 205;
