@@ -54,7 +54,6 @@
 #define VER_MAJOR   1
 #define VER_MINOR   2
 #define PATCH_LEVEL 8
-#define WAKELOCK_HOLD_TIME 400 /* in ms */
 #define GF_SPIDEV_NAME     "goodix,fingerprint"
 /*device name after register in charater*/
 #define GF_DEV_NAME            "goodix_fp"
@@ -74,22 +73,14 @@ struct sock *gf_nl_sk = NULL;
 
 static inline void sendnlmsg(char *msg)
 {
-	struct sk_buff *skb_1;
-	struct nlmsghdr *nlh;
 	int len = sizeof(char);
-	int ret = 0;
-	if (!msg || !gf_nl_sk || !pid) {
-		return ;
-	}
-	skb_1 = alloc_skb(len, GFP_KERNEL | GFP_DMA);
-	if (!skb_1) {
-		return;
-	}
+	struct nlmsghdr *nlh;
+	struct sk_buff *skb_1 = alloc_skb(len, GFP_KERNEL | GFP_DMA);
 	nlh = nlmsg_put(skb_1, 0, 0, 0, len, 0);
 	NETLINK_CB(skb_1).portid = 0;
 	NETLINK_CB(skb_1).dst_group = 0;
 	memcpy(NLMSG_DATA(nlh), msg, len);
-	ret = netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
+	netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
 }
 
 static inline void sendnlmsg_tp(struct fp_underscreen_info *msg)
@@ -130,15 +121,11 @@ static inline void nl_data_ready(struct sk_buff *__skb)
 static inline int netlink_init(void)
 {
 	struct netlink_kernel_cfg netlink_cfg = {0, };
-	netlink_cfg.groups = 0;
-	netlink_cfg.flags = 0;
+	netlink_cfg.groups = netlink_cfg.flags = 0;
 	netlink_cfg.input = nl_data_ready;
 	netlink_cfg.cb_mutex = NULL;
 	gf_nl_sk = netlink_kernel_create(&init_net, NETLINK_TEST,
 			&netlink_cfg);
-	if(!gf_nl_sk){
-		return 1;
-	}
 	return 0;
 }
 
@@ -248,8 +235,8 @@ static inline void gf_disable_irq(struct gf_dev *gf_dev)
 
 static inline irqreturn_t gf_irq(int irq, void *handle)
 {
-	char msg = GF_NET_EVENT_IRQ;
-	__pm_wakeup_event(&fp_wakelock, WAKELOCK_HOLD_TIME);
+	char msg = 1;
+	__pm_wakeup_event(&fp_wakelock, 400);
 	sendnlmsg(&msg);
 	return IRQ_HANDLED;
 }
@@ -259,7 +246,7 @@ static inline int irq_setup(struct gf_dev *gf_dev)
 	int status;
 	gf_dev->irq = gpio_to_irq(gf_dev->irq_gpio);
 	status = request_threaded_irq(gf_dev->irq, NULL, gf_irq,
-			IRQF_TRIGGER_RISING | IRQF_ONESHOT |IRQF_NO_SUSPEND | IRQF_FORCE_RESUME | IRQF_PRIME_AFFINE,
+			IRQF_TRIGGER_RISING | IRQF_ONESHOT |IRQF_NO_SUSPEND | IRQF_FORCE_RESUME | IRQF_HP_AFFINE,
 			"gf", gf_dev);
 
 	if (status) {
@@ -274,7 +261,6 @@ static inline int irq_setup(struct gf_dev *gf_dev)
 static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	struct gf_dev *gf_dev = &gf;
-	struct gf_key gf_key;
 	int retval = 0;
 	u8 netlink_route = NETLINK_TEST;
 	struct gf_ioc_chip_info info;
@@ -338,43 +324,23 @@ static inline long gf_compat_ioctl(struct file *filp, unsigned int cmd, unsigned
 static inline int gf_open(struct inode *inode, struct file *filp)
 {
 	struct gf_dev *gf_dev = &gf;
-	int status = -ENXIO;
 
 	mutex_lock(&device_list_lock);
-
-	list_for_each_entry(gf_dev, &device_list, device_entry) {
-		if (gf_dev->devt == inode->i_rdev) {
-			status = 0;
-			break;
-		}
-	}
-
-	if (status == 0) {
-			gf_dev->users++;
-			filp->private_data = gf_dev;
-			nonseekable_open(inode, filp);
-			gf_dev->device_available = 1;
-	}
+	filp->private_data = gf_dev;
+	nonseekable_open(inode, filp);
 	mutex_unlock(&device_list_lock);
-	return status;
+	return 0;
 }
 
 static inline int gf_release(struct inode *inode, struct file *filp)
 {
 	struct gf_dev *gf_dev = &gf;
-	int status = 0;
 
 	mutex_lock(&device_list_lock);
 	gf_dev = filp->private_data;
 	filp->private_data = NULL;
-	gf_dev->users--;
-	if (!gf_dev->users) {
-		gf_disable_irq(gf_dev);
-		gf_dev->device_available = 0;
-		gf_power_off(gf_dev);
-	}
 	mutex_unlock(&device_list_lock);
-	return status;
+	return 0;
 }
 
 static const struct file_operations gf_fops = {
@@ -389,7 +355,6 @@ static inline ssize_t screen_state_get(struct device *device,
 			     struct device_attribute *attribute,
 			     char *buffer)
 {
-	struct gf_dev *gfDev = dev_get_drvdata(device);
 	return scnprintf(buffer, PAGE_SIZE, "%i\n", 1);
 }
 
@@ -437,7 +402,8 @@ EXPORT_SYMBOL(opticalfp_irq_handler);
 
 int __always_inline gf_opticalfp_irq_handler(int event)
 {
-	char msg = 0;
+	char msgdown = 4;
+	char msgup = 5;
 	struct gf_dev *gf_dev = &gf;
 	if (gf.spi == NULL) {
 		return 0;
@@ -447,14 +413,12 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	case 1:
 	  gf_dev->udfps_pressed = 1;
 	  sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-	  msg = GF_NET_EVENT_TP_TOUCHDOWN;
-	  sendnlmsg(&msg);
+	  sendnlmsg(&msgdown);
 	  break;
 	case 0:
 	  gf_dev->udfps_pressed = 0;
 	  sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-	  msg = GF_NET_EVENT_TP_TOUCHUP;
-	  sendnlmsg(&msg);
+	  sendnlmsg(&msgup);
 	  break;
 	}
 
@@ -468,7 +432,10 @@ static int __always_inline goodix_fb_state_chg_callback(
 	struct gf_dev *gf_dev;
 	struct msm_drm_notifier *evdata = data;
 	unsigned int blank;
-	char msg = 0;
+	char msg_ui_disappear = 7;
+	char msg_ui_appear = 6;
+	char msg_fb_black = 2;
+	char msg_fb_unblack = 3;
 
 	if (val != MSM_DRM_EARLY_EVENT_BLANK &&
 		val != MSM_DRM_ONSCREENFINGERPRINT_EVENT)
@@ -482,12 +449,10 @@ static int __always_inline goodix_fb_state_chg_callback(
 	if (val == MSM_DRM_ONSCREENFINGERPRINT_EVENT) {
 		switch (blank) {
 		case 0:
-			msg = GF_NET_EVENT_UI_DISAPPEAR;
-			sendnlmsg(&msg);
+			sendnlmsg(&msg_ui_disappear);
 			break;
 		case 1:
-			msg = GF_NET_EVENT_UI_READY;
-			sendnlmsg(&msg);
+			sendnlmsg(&msg_ui_appear);
 			break;
 		default:
 			break;
@@ -503,15 +468,13 @@ static int __always_inline goodix_fb_state_chg_callback(
 		case MSM_DRM_BLANK_POWERDOWN:
 			if (gf_dev->device_available == 1) {
 				gf_dev->fb_black = 1;
-				msg = GF_NET_EVENT_FB_BLACK;
-				sendnlmsg(&msg);
+				sendnlmsg(&msg_fb_black);
 			}
 			break;
 		case MSM_DRM_BLANK_UNBLANK:
 			if (gf_dev->device_available == 1) {
 				gf_dev->fb_black = 0;
-				msg = GF_NET_EVENT_FB_UNBLACK;
-				sendnlmsg(&msg);
+				sendnlmsg(&msg_fb_unblack);
 			}
 			break;
 		default:
@@ -527,7 +490,6 @@ static int gf_probe(struct platform_device *pdev)
 	struct gf_dev *gf_dev = &gf;
 	int status = -EINVAL;
 	unsigned long minor;
-	int i;
 	INIT_LIST_HEAD(&gf_dev->device_entry);
 	gf_dev->spi = pdev;
 	gf_dev->irq_gpio = -EINVAL;
