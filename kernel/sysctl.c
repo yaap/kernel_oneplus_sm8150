@@ -349,23 +349,6 @@ static struct ctl_table kern_table[] = {
 		.proc_handler   = proc_dointvec,
 	},
 	{
-		.procname	= "sched_group_upmigrate",
-		.data		= &sysctl_sched_group_upmigrate_pct,
-		.maxlen		= sizeof(unsigned int),
-		.mode		= 0644,
-		.proc_handler	= walt_proc_group_thresholds_handler,
-		.extra1		= &sysctl_sched_group_downmigrate_pct,
-	},
-	{
-		.procname	= "sched_group_downmigrate",
-		.data		= &sysctl_sched_group_downmigrate_pct,
-		.maxlen		= sizeof(unsigned int),
-		.mode		= 0644,
-		.proc_handler	= walt_proc_group_thresholds_handler,
-		.extra1		= &zero,
-		.extra2		= &sysctl_sched_group_upmigrate_pct,
-	},
-	{
 		.procname	= "sched_boost",
 		.data		= &sysctl_sched_boost,
 		.maxlen		= sizeof(unsigned int),
