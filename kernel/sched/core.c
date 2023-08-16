@@ -995,19 +995,19 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 		if (strcmp(css->cgroup->kn->name, "top-app") == 0
 			&& time_before(jiffies, last_input_time + msecs_to_jiffies(5000))
 			&& kp_active_mode() != 3) {
-			if (time_before(jiffies, last_input_time + msecs_to_jiffies(500)))
+			if (time_before(jiffies, last_input_time + msecs_to_jiffies(2000)))
 				tg_min = 612;
 			else
-				tg_min = 410;
+				tg_min = 460;
 		} else if (strcmp(css->cgroup->kn->name, "top-app") == 0
 			&& kp_active_mode() == 3) {
 			if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
 				tg_min = 612;
 			else
-				tg_min = 410;
+				tg_min = 460;
 		} else if (strcmp(css->cgroup->kn->name, "foreground") == 0
 			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(750))) {
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1000))) {
 				tg_min = 675;
 				tg_max = 1024;
 				task_group(p)->latency_sensitive = 1;
