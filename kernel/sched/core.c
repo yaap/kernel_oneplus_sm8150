@@ -990,52 +990,8 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	if (task_group(p) == &root_task_group)
 		return uc_req;
 
-	if (kp_active_mode() != 1) {
-		css = task_css(p, cpu_cgrp_id);
-		if (strcmp(css->cgroup->kn->name, "top-app") == 0
-			&& time_before(jiffies, last_input_time + msecs_to_jiffies(5000))
-			&& kp_active_mode() != 3) {
-			if (time_before(jiffies, last_input_time + msecs_to_jiffies(2000)))
-				tg_min = 612;
-			else
-				tg_min = 460;
-		} else if (strcmp(css->cgroup->kn->name, "top-app") == 0
-			&& kp_active_mode() == 3) {
-			if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
-				tg_min = 612;
-			else
-				tg_min = 460;
-		} else if (strcmp(css->cgroup->kn->name, "foreground") == 0
-			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1000))) {
-				tg_min = 675;
-				tg_max = 1024;
-				task_group(p)->latency_sensitive = 1;
-			} else {
-				tg_min = 505;
-				tg_max = 785;
-				task_group(p)->latency_sensitive = 0;
-			}
-		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0) {
-			if (time_before(jiffies, last_cam_time + msecs_to_jiffies(1000))) {
-				task_group(p)->latency_sensitive = 1;
-				tg_min = 612;
-			} else {
-				task_group(p)->latency_sensitive = 0;
-			}
-		} else if (strcmp(css->cgroup->kn->name, "system_background") == 0
-			&& time_before(jiffies, last_mb_time + msecs_to_jiffies(3000))) {
-			tg_min = 205;
-			tg_max = 870;
-		}
-		if (!tg_min)
-			tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
-	} else {
-		tg_min = 0;
-	}
-	if (!tg_max)
-		tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
-
+	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
+	tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 	value = uc_req.value;
 	value = clamp(value, tg_min, tg_max);
 	uclamp_se_set(&uc_req, value, false);
