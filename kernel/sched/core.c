@@ -972,13 +972,41 @@ static void uclamp_sync_util_min_rt_default(void)
 }
 
 extern int kp_active_mode(void);
+
+static inline void uclamp_boost_write(struct task_struct *p)
+{
+	struct cgroup_subsys_state *css;
+
+	css = task_css(p, cpu_cgrp_id);
+
+	//top-app min clamp input boost
+	if (strcmp(css->cgroup->kn->name, "top-app") == 0) {
+		if (kp_active_mode() == 3) {
+			task_group(p)->uclamp[UCLAMP_MIN].value = 410;
+			return;
+		}
+		if (time_before(jiffies, last_input_time + msecs_to_jiffies(300))) {
+			task_group(p)->uclamp[UCLAMP_MIN].value = 460;
+			return;
+		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(3000))) {
+			task_group(p)->uclamp[UCLAMP_MIN].value = 410;
+			return;
+		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
+			task_group(p)->uclamp[UCLAMP_MIN].value = 205;
+			return;
+		} else {
+			task_group(p)->uclamp[UCLAMP_MIN].value = 102;
+			return;
+		}
+	}
+}
+
 static inline struct uclamp_se
 uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 {
 	/* Copy by value as we could modify it */
 	struct uclamp_se uc_req = p->uclamp_req[clamp_id];
 #ifdef CONFIG_UCLAMP_TASK_GROUP
-	struct cgroup_subsys_state *css;
 	unsigned int tg_min, tg_max, value;
 
 	/*
@@ -990,8 +1018,16 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	if (task_group(p) == &root_task_group)
 		return uc_req;
 
+	//battery kprofile optimization
+	if (kp_active_mode() == 1) {
+		tg_min = 0;
+	} else {
+		//Run for clamp boosting
+		uclamp_boost_write(p);
+
+		tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
+	}
 	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
-	tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 	value = uc_req.value;
 	value = clamp(value, tg_min, tg_max);
 	uclamp_se_set(&uc_req, value, false);
