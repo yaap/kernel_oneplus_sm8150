@@ -177,6 +177,7 @@ struct sde_plane_state {
 
 	u8 fod_dim_alpha;
 	u8 dc_dim_alpha;
+	bool color_invert_on;
 };
 
 /**
