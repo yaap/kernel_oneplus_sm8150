@@ -986,10 +986,10 @@ static inline void uclamp_boost_write(struct task_struct *p)
 			return;
 		}
 		if (time_before(jiffies, last_input_time + msecs_to_jiffies(300))) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 460;
+			task_group(p)->uclamp[UCLAMP_MIN].value = 410;
 			return;
 		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(3000))) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 410;
+			task_group(p)->uclamp[UCLAMP_MIN].value = 307;
 			return;
 		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
 			task_group(p)->uclamp[UCLAMP_MIN].value = 205;
