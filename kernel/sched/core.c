@@ -982,16 +982,13 @@ static inline void uclamp_boost_write(struct task_struct *p)
 	//top-app min clamp input boost
 	if (strcmp(css->cgroup->kn->name, "top-app") == 0) {
 		if (kp_active_mode() == 3) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 612;
+			task_group(p)->uclamp[UCLAMP_MIN].value = 307;
 			return;
 		}
 		if (time_before(jiffies, last_input_time + msecs_to_jiffies(300))) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 410;
-			return;
-		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(3000))) {
 			task_group(p)->uclamp[UCLAMP_MIN].value = 307;
 			return;
-		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
+		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
 			task_group(p)->uclamp[UCLAMP_MIN].value = 205;
 			return;
 		} else {
