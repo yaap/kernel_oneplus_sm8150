@@ -1844,7 +1844,6 @@ static int sec_tp_probe(struct i2c_client *client,
 	/* 6. setup pm_qos requests*/
 	ts->pm_i2c_req.type = PM_QOS_REQ_AFFINE_IRQ;
 	ts->pm_i2c_req.irq = geni_i2c_get_adap_irq(client);
-	irq_set_perf_affinity(ts->pm_i2c_req.irq, IRQF_PRIME_AFFINE);
 	pm_qos_add_request(&ts->pm_i2c_req, PM_QOS_CPU_DMA_LATENCY,
 		PM_QOS_DEFAULT_VALUE);
 
