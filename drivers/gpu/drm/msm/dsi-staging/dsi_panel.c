@@ -887,15 +887,11 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 		return -EINVAL;
 	}
 
-	if (panel->is_hbm_enabled || HBM_flag
-		|| panel->power_mode == SDE_MODE_DPMS_LP1
-		|| panel->power_mode == SDE_MODE_DPMS_LP2) {
-		//pr_err("XXX brightness blocked");
-		return 0;
-	}
-
 	dsi = &panel->mipi_device;
 	mode = panel->cur_mode;
+
+	if (panel->is_hbm_enabled || HBM_flag == true)
+		return 0;
 
 	saved_backlight = bl_lvl;
 
@@ -1139,12 +1135,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 
 	bl->real_bl_level = bl_lvl;
 
-	if (!panel->force_fod_dim_alpha) {
-		if (panel->aod_state > 1)
-			panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, panel->aod_state);
-		else
-			panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, bl_lvl);
-	}
+	if (!panel->force_fod_dim_alpha)
+		panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, bl_lvl);
 
 	panel->dc_dim_alpha = dsi_panel_calc_dc_dim_alpha(panel, bl_lvl);
 
@@ -5048,39 +5040,6 @@ error:
 	return rc;
 }
 
-struct blbl {
-        u32 bl;
-        u32 aod_bl;
-};
-
-struct blbl aod_bl_lut[] = {
-	{0, 1},
-	{10, 1},
-	{40, 9},
-	{90, 30},
-	{120, 60},
-	{280, 100},
-};
-
-u32 dsi_panel_get_aod_bl(u32 cur_bl) {
-	int i;
-
-	for (i = 0; i < 6; i++)
-                if (aod_bl_lut[i].bl >= cur_bl)
-                        break;
-        if (i == 0)
-                return aod_bl_lut[i].aod_bl;
-
-        if (i == 5)
-                return aod_bl_lut[i - 1].aod_bl;
-
-        return interpolate(cur_bl,
-                           aod_bl_lut[i - 1].bl,
-                           aod_bl_lut[i].bl,
-                           aod_bl_lut[i - 1].aod_bl,
-                           aod_bl_lut[i].aod_bl);
-}
-
 int dsi_panel_set_lp1(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -5112,24 +5071,17 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		pr_debug("[%s] failed to send DSI_CMD_SET_LP1 cmd, rc=%d\n",
 		       panel->name, rc);
 
-	if (panel->hw_type == DSI_PANEL_SAMSUNG_S6E3HC2) {
-		if (!panel->aod_state) {
-			panel->aod_state = dsi_panel_get_aod_bl(cur_bl);
-		}
-		dsi_panel_set_backlight(panel, panel->aod_state);
-	} else {
-		if (!panel->aod_state) {
-			if (cur_bl > 90)
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
-			else
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
+	if (!panel->aod_state) {
+		if (cur_bl > 90)
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
+		else
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
 
-			if (rc)
-				pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
-				       panel->name, rc);
-			else
-				panel->aod_state = 1;
-		}
+		if (rc)
+			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
+			       panel->name, rc);
+		else
+			panel->aod_state = true;
 	}
 
 	panel->need_power_on_backlight = true;
@@ -5164,24 +5116,17 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 		pr_debug("[%s] failed to send DSI_CMD_SET_LP2 cmd, rc=%d\n",
 		       panel->name, rc);
 
-	if (panel->hw_type == DSI_PANEL_SAMSUNG_S6E3HC2) {
-		if (!panel->aod_state) {
-			panel->aod_state = dsi_panel_get_aod_bl(cur_bl);
-		}
-		dsi_panel_set_backlight(panel, panel->aod_state);
-	} else {
-		if (!panel->aod_state) {
-			if (cur_bl > 90)
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
-			else
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
+	if (!panel->aod_state) {
+		if (cur_bl > 90)
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
+		else
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
 
-			if (rc)
-				pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
-				       panel->name, rc);
-			else
-				panel->aod_state = 1;
-		}
+		if (rc)
+			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
+			       panel->name, rc);
+		else
+			panel->aod_state = true;
 	}
 
 	panel->need_power_on_backlight = true;
@@ -5217,16 +5162,12 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (panel->aod_state) {
-		if (panel->hw_type == DSI_PANEL_SAMSUNG_S6E3HC2) {
-			panel->aod_state = 0;
-		} else {
-			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_OFF);
-			if (rc)
-				pr_debug("[%s] failed to send DSI_CMD_SET_AOD_OFF cmd, rc=%d\n",
-				       panel->name, rc);
-			else
-				panel->aod_state = 0;
-		}
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_OFF);
+		if (rc)
+			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_OFF cmd, rc=%d\n",
+			       panel->name, rc);
+		else
+			panel->aod_state = false;
 	}
 exit:
 	mutex_unlock(&panel->panel_lock);
