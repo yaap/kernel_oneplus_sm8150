@@ -589,78 +589,6 @@ static void pm_qos_irq_notify(struct irq_affinity_notify *notify,
 void pm_qos_add_request(struct pm_qos_request *req,
 			int pm_qos_class, s32 value)
 {
-	if (!req) /*guard against callers passing in null */
-		return;
-
-	if (pm_qos_request_active(req)) {
-		WARN(1, KERN_ERR "pm_qos_add_request() called for already added request\n");
-		return;
-	}
-
-	switch (req->type) {
-	case PM_QOS_REQ_AFFINE_CORES:
-		if (!req->cpus_affine) {
-			req->cpus_affine = CPUMASK_ALL;
-			req->type = PM_QOS_REQ_ALL_CORES;
-			WARN(1, "Affine cores not set for request with affinity flag\n");
-		}
-		break;
-#ifdef CONFIG_SMP
-	case PM_QOS_REQ_AFFINE_IRQ:
-		if (irq_can_set_affinity(req->irq)) {
-			struct irq_desc *desc = irq_to_desc(req->irq);
-			struct cpumask *mask;
-
-			if (!desc)
-				return;
-
-			mask = desc->irq_data.common->affinity;
-
-			/* Get the current affinity */
-			req->cpus_affine = *cpumask_bits(mask);
-			req->irq_notify.irq = req->irq;
-			req->irq_notify.notify = pm_qos_irq_notify;
-			req->irq_notify.release = pm_qos_irq_release;
-
-		} else {
-			req->type = PM_QOS_REQ_ALL_CORES;
-			req->cpus_affine = CPUMASK_ALL;
-			WARN(1, "IRQ-%d not set for request with affinity flag\n",
-					req->irq);
-		}
-		break;
-#endif
-	default:
-		WARN(1, "Unknown request type %d\n", req->type);
-		/* fall through */
-	case PM_QOS_REQ_ALL_CORES:
-		req->cpus_affine = CPUMASK_ALL;
-		break;
-	}
-
-	trace_pm_qos_add_request(pm_qos_class, value);
-	pm_qos_update_target(pm_qos_array[pm_qos_class]->constraints,
-			     &req->node, PM_QOS_ADD_REQ, value);
-	/* Fixes rare panic */
-	req->pm_qos_class = pm_qos_class;
-
-#ifdef CONFIG_SMP
-	if (req->type == PM_QOS_REQ_AFFINE_IRQ &&
-			irq_can_set_affinity(req->irq)) {
-		int ret = 0;
-
-		ret = irq_set_affinity_notifier(req->irq,
-					&req->irq_notify);
-		if (ret) {
-			WARN(1, "IRQ affinity notify set failed\n");
-			req->type = PM_QOS_REQ_ALL_CORES;
-			req->cpus_affine = CPUMASK_ALL;
-			pm_qos_update_target(
-				pm_qos_array[pm_qos_class]->constraints,
-				&req->node, PM_QOS_UPDATE_REQ, value);
-		}
-	}
-#endif
 }
 EXPORT_SYMBOL_GPL(pm_qos_add_request);
 
@@ -677,15 +605,7 @@ EXPORT_SYMBOL_GPL(pm_qos_add_request);
 void __always_inline pm_qos_update_request(struct pm_qos_request *req,
 			   s32 new_value)
 {
-	if (!req) /*guard against callers passing in null */
-		return;
-
-	if (!pm_qos_request_active(req)) {
-		WARN(1, KERN_ERR "pm_qos_update_request() called for unknown object\n");
-		return;
-	}
-
-	__pm_qos_update_request(req, new_value);
+	return;
 }
 EXPORT_SYMBOL_GPL(pm_qos_update_request);
 
@@ -699,30 +619,6 @@ EXPORT_SYMBOL_GPL(pm_qos_update_request);
  */
 void pm_qos_remove_request(struct pm_qos_request *req)
 {
-	if (!req) /*guard against callers passing in null */
-		return;
-		/* silent return to keep pcm code cleaner */
-
-	if (!pm_qos_request_active(req)) {
-		WARN(1, "%s called for unknown object\n", __func__);
-		return;
-	}
-
-#ifdef CONFIG_SMP
-	if (req->type == PM_QOS_REQ_AFFINE_IRQ) {
-		int ret = 0;
-		/* Get the current affinity */
-		ret = irq_set_affinity_notifier(req->irq, NULL);
-		if (ret)
-			WARN(1, "IRQ affinity notify set failed\n");
-	}
-#endif
-
-	trace_pm_qos_remove_request(req->pm_qos_class, PM_QOS_DEFAULT_VALUE);
-	pm_qos_update_target(pm_qos_array[req->pm_qos_class]->constraints,
-			     &req->node, PM_QOS_REMOVE_REQ,
-			     PM_QOS_DEFAULT_VALUE);
-	memset(req, 0, sizeof(*req));
 }
 EXPORT_SYMBOL_GPL(pm_qos_remove_request);
 
@@ -736,13 +632,7 @@ EXPORT_SYMBOL_GPL(pm_qos_remove_request);
  */
 int pm_qos_add_notifier(int pm_qos_class, struct notifier_block *notifier)
 {
-	int retval;
-
-	retval = blocking_notifier_chain_register(
-			pm_qos_array[pm_qos_class]->constraints->notifiers,
-			notifier);
-
-	return retval;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(pm_qos_add_notifier);
 
@@ -756,13 +646,7 @@ EXPORT_SYMBOL_GPL(pm_qos_add_notifier);
  */
 int pm_qos_remove_notifier(int pm_qos_class, struct notifier_block *notifier)
 {
-	int retval;
-
-	retval = blocking_notifier_chain_unregister(
-			pm_qos_array[pm_qos_class]->constraints->notifiers,
-			notifier);
-
-	return retval;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(pm_qos_remove_notifier);
 
