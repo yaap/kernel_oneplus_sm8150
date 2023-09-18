@@ -1005,6 +1005,26 @@ static inline void uclamp_boost_write(struct task_struct *p)
 			return;
 		}
 	}
+#ifdef CONFIG_STOCKISH_ROM_SUPPORT
+	if (strcmp(css->cgroup->kn->name, "foreground") == 0) {
+		task_group(p)->uclamp[UCLAMP_MIN].value = 0;
+		task_group(p)->uclamp[UCLAMP_MAX].value = 512;
+	} else if (strcmp(css->cgroup->kn->name, "background") == 0) {
+		task_group(p)->uclamp[UCLAMP_MIN].value = 205;
+		task_group(p)->uclamp[UCLAMP_MAX].value = 1024;
+	} else if (strcmp(css->cgroup->kn->name, "system-background") == 0) {
+		task_group(p)->uclamp[UCLAMP_MIN].value = 0;
+		task_group(p)->uclamp[UCLAMP_MAX].value = 410;
+	} else if (strcmp(css->cgroup->kn->name, "nnapi-hal") == 0) {
+		task_group(p)->uclamp[UCLAMP_MIN].value = 768;
+		task_group(p)->uclamp[UCLAMP_MAX].value = 1024;
+		task_group(p)->latency_sensitive = 1;
+	} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0) {
+		task_group(p)->uclamp[UCLAMP_MIN].value = 512;
+		task_group(p)->uclamp[UCLAMP_MAX].value = 1024;
+		task_group(p)->latency_sensitive = 1;
+	}
+#endif
 }
 
 static inline struct uclamp_se
@@ -1030,7 +1050,6 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	} else {
 		//Run for clamp boosting
 		uclamp_boost_write(p);
-
 		tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 	}
 	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
