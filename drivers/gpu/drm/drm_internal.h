@@ -131,6 +131,8 @@ int dsi_display_set_dci_p3_mode(struct drm_connector *connector, int level);
 int dsi_display_get_dci_p3_mode(struct drm_connector *connector);
 int dsi_display_set_night_mode(struct drm_connector *connector, int level);
 int dsi_display_get_night_mode(struct drm_connector *connector);
+int dsi_display_set_reading_mode(struct drm_connector *connector, int level);
+int dsi_display_get_reading_mode(struct drm_connector *connector);
 int dsi_display_get_serial_number(struct drm_connector *connector);
 int dsi_display_get_serial_number_year(struct drm_connector *connector);
 int dsi_display_get_serial_number_mon(struct drm_connector *connector);

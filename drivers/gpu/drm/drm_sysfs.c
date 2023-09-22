@@ -425,6 +425,39 @@ static ssize_t hbm_store(struct device *dev,
 	return count;
 }
 
+static ssize_t reading_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct drm_connector *connector = to_drm_connector(dev);
+	int ret = 0;
+	int reading_mode = 0;
+
+	reading_mode = dsi_display_get_reading_mode(connector);
+
+	ret = scnprintf(buf, PAGE_SIZE, "%d\n", reading_mode);
+	return ret;
+}
+
+static ssize_t reading_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct drm_connector *connector = to_drm_connector(dev);
+	int ret = 0;
+	int reading_mode = 0;
+
+	ret = kstrtoint(buf, 10, &reading_mode);
+	if (ret) {
+		pr_err("kstrtoint failed. ret=%d\n", ret);
+		return ret;
+	}
+
+	ret = dsi_display_set_reading_mode(connector, reading_mode);
+	if (ret)
+		pr_err("set reading mode(%d) fail\n", reading_mode);
+
+	return count;
+}
+
 static ssize_t hbm_brightness_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -1171,6 +1204,7 @@ static DEVICE_ATTR_RO(modes);
 static DEVICE_ATTR_RW(acl);
 static DEVICE_ATTR_RW(hbm);
 static DEVICE_ATTR_RW(hbm_brightness);
+static DEVICE_ATTR_RW(reading);
 static DEVICE_ATTR_RW(aod);
 static DEVICE_ATTR_RW(aod_disable);
 static DEVICE_ATTR_RW(DCI_P3);
@@ -1205,6 +1239,7 @@ static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_acl.attr,
 	&dev_attr_hbm.attr,
 	&dev_attr_hbm_brightness.attr,
+	&dev_attr_reading.attr,
 	&dev_attr_aod.attr,
 	&dev_attr_aod_disable.attr,
 	&dev_attr_DCI_P3.attr,

@@ -262,6 +262,7 @@ struct dsi_panel {
 	int acl_mode_index;
 	int hbm_mode;
 	int hbm_brightness;
+	int reading_mode;
 	int aod_mode;
 	int aod_status;
 	int aod_curr_mode;
@@ -444,6 +445,7 @@ int dsi_panel_parse_esd_reg_read_configs(struct dsi_panel *panel);
 
 void dsi_panel_ext_bridge_put(struct dsi_panel *panel);
 int dsi_panel_set_hbm_mode(struct dsi_panel *panel, int level);
+int dsi_panel_set_reading_mode(struct dsi_panel *panel, int level);
 int dsi_panel_set_acl_mode(struct dsi_panel *panel, int level);
 int dsi_panel_set_hbm_brightness(struct dsi_panel *panel, int level);
 extern int msm_drm_notifier_call_chain(unsigned long val, void *v);

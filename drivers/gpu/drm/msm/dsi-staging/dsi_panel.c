@@ -5640,6 +5640,9 @@ int dsi_panel_disable(struct dsi_panel *panel)
 		pr_debug("Kill dim when panel goes off");
 		HBM_flag = false;
 
+	if (panel->reading_mode)
+		panel->reading_mode = 0;
+
 	if (panel->aod_mode == 2)
 			panel->aod_status = 1;
 
@@ -5720,7 +5723,6 @@ int dsi_panel_post_unprepare(struct dsi_panel *panel)
 
 	mutex_lock(&panel->panel_lock);
 
-
 	rc = dsi_panel_power_off(panel);
 	if (rc) {
 		pr_debug("[%s] panel power_Off failed, rc=%d\n",
@@ -5743,57 +5745,57 @@ int dsi_panel_post_unprepare(struct dsi_panel *panel)
 	return rc;
 }
 int dsi_panel_set_hbm_mode(struct dsi_panel *panel, int level)
-	{
-		int rc = 0;
-		u32 count;
-		struct dsi_display_mode *mode;
+{
+	int rc = 0;
+	u32 count;
+	struct dsi_display_mode *mode;
 
-		if (!panel || !panel->cur_mode) {
-			pr_debug("Invalid params\n");
-			return -EINVAL;
-		}
-
-		mode = panel->cur_mode;
-
-		switch (level) {
-		case 0:
-			count = mode->priv_info->cmd_sets[DSI_CMD_SET_HBM_OFF].count;
-			if (!count) {
-				pr_debug("This panel does not support HBM mode off.\n");
-				goto error;
-			}
-			else {
-				HBM_flag = false;
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_OFF);
-				pr_debug("Send DSI_CMD_SET_HBM_OFF cmds.\n");
-				pr_debug("hbm_backight = %d, panel->bl_config.bl_level = %d\n",panel->hbm_backlight, panel->bl_config.bl_level);
-				rc = dsi_panel_update_backlight(panel, saved_backlight);
-			}
-			break;
-
-		default:
-			count = mode->priv_info->cmd_sets[DSI_CMD_SET_HBM_ON_5].count;
-			if (!count) {
-				pr_debug("This panel does not support HBM mode 5.\n");
-				goto error;
-			}
-			else {
-				dsi_panel_update_backlight(panel, panel->hbm_backlight);
-				HBM_flag = true;
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON_5);
-				pr_debug("Send DSI_CMD_SET_HBM_ON_5 cmds.\n");
-			}
-			break;
-		}
-
-		pr_debug("Set HBM Mode = %d\n", level);
-		if(level == 5){
-			pr_debug("HBM == 5 for fingerprint\n");
-		}
-
-	error:
-		return rc;
+	if (!panel || !panel->cur_mode) {
+		pr_debug("Invalid params\n");
+		return -EINVAL;
 	}
+
+	mode = panel->cur_mode;
+
+	switch (level) {
+	case 0:
+		count = mode->priv_info->cmd_sets[DSI_CMD_SET_HBM_OFF].count;
+		if (!count) {
+			pr_debug("This panel does not support HBM mode off.\n");
+			goto error;
+		}
+		else {
+			HBM_flag = false;
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_OFF);
+			pr_debug("Send DSI_CMD_SET_HBM_OFF cmds.\n");
+			pr_debug("hbm_backight = %d, panel->bl_config.bl_level = %d\n",panel->hbm_backlight, panel->bl_config.bl_level);
+			rc = dsi_panel_update_backlight(panel, saved_backlight);
+		}
+		break;
+
+	default:
+		count = mode->priv_info->cmd_sets[DSI_CMD_SET_HBM_ON_5].count;
+		if (!count) {
+			pr_debug("This panel does not support HBM mode 5.\n");
+			goto error;
+		}
+		else {
+			dsi_panel_update_backlight(panel, panel->hbm_backlight);
+			HBM_flag = true;
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_HBM_ON_5);
+			pr_debug("Send DSI_CMD_SET_HBM_ON_5 cmds.\n");
+		}
+		break;
+	}
+
+	pr_debug("Set HBM Mode = %d\n", level);
+	if(level == 5){
+		pr_debug("HBM == 5 for fingerprint\n");
+	}
+
+error:
+	return rc;
+}
 
 int dsi_panel_set_hbm_brightness(struct dsi_panel *panel, int level)
 {
@@ -5834,6 +5836,61 @@ int dsi_panel_set_hbm_brightness(struct dsi_panel *panel, int level)
 
 error:
 	mutex_unlock(&panel->panel_lock);
+	return rc;
+}
+
+int dsi_panel_set_reading_mode(struct dsi_panel *panel, int level)
+{
+	int rc = 0;
+	u32 count;
+	struct dsi_display_mode *mode;
+
+	if (!panel || !panel->cur_mode) {
+		pr_debug("Invalid params\n");
+		return -EINVAL;
+	}
+
+	mode = panel->cur_mode;
+
+	switch (level) {
+	case 0:
+		count = mode->priv_info->cmd_sets[DSI_CMD_SET_AOD_OFF].count;
+		if (!count) {
+			pr_debug("This panel does not support reading mode off.\n");
+			goto error;
+		}
+		else {
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_OFF);
+			pr_debug("Send DSI_CMD_SET_AOD_OFF cmds.\n");
+		}
+		break;
+
+	case 1:
+		count = mode->priv_info->cmd_sets[DSI_CMD_SET_AOD_ON_1].count;
+		if (!count) {
+			pr_debug("This panel does not support reading mode 1.\n");
+			goto error;
+		}
+		else {
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
+			pr_debug("Send DSI_CMD_SET_AOD_ON_1 cmds.\n");
+		}
+		break;
+	case 2:
+		count = mode->priv_info->cmd_sets[DSI_CMD_SET_AOD_ON_5].count;
+		if (!count) {
+			pr_debug("This panel does not support reading mode 5.\n");
+			goto error;
+		}
+		else {
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
+			pr_debug("Send DSI_CMD_SET_AOD_ON_5 cmds.\n");
+		}
+		break;
+	}
+	pr_debug("Set Reading Mode = %d\n", level);
+
+error:
 	return rc;
 }
 
