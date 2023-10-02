@@ -5466,7 +5466,8 @@ int sched_setscheduler_nocheck(struct task_struct *p, int policy,
 void sched_set_fifo(struct task_struct *p)
 {
 	struct sched_param sp = { .sched_priority = MAX_RT_PRIO / 2 };
-	WARN_ON_ONCE(sched_setscheduler_nocheck(p, SCHED_FIFO, &sp) != 0);
+	//force to SCHED_RR for latency
+	WARN_ON_ONCE(sched_setscheduler_nocheck(p, SCHED_RR, &sp) != 0);
 }
 EXPORT_SYMBOL_GPL(sched_set_fifo);
 
