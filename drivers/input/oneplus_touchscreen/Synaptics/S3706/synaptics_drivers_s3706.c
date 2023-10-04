@@ -358,15 +358,13 @@ static inline int synaptics_enable_interrupt(struct chip_data_s3706 *chip_info,
 	return 0;
 }
 
-static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
-				   int is_suspended)
+static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable, int is_suspended)
 {
 	int ret = 0;
 	uint8_t device_status = 0;
 	uint8_t interrupt_status = 0;
 	u8 result_event = 0;
-	uint8_t *touchold_buffer = dma_buffer->touchold_buf;
-	int touchhold_flag = 0;
+	uint8_t touchhold_flag = 0;
 	struct chip_data_s3706 *chip_info = (struct chip_data_s3706 *)chip_data;
 
 #ifdef CONFIG_SYNAPTIC_RED
@@ -374,33 +372,31 @@ static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
 		return IRQ_IGNORE;
 	}
 #endif
+
 	ret = touch_i2c_write_byte(chip_info->client, 0xff, 0x0);
-	ret = touch_i2c_read_word(chip_info->client,
-				  chip_info->reg_info.F01_RMI_DATA_BASE);
+	ret = touch_i2c_read_word(chip_info->client, chip_info->reg_info.F01_RMI_DATA_BASE);
 	if (ret < 0) {
 		TPD_INFO("%s, i2c read error, ret = %d\n", __func__, ret);
 		return IRQ_EXCEPTION;
 	}
+
 	device_status = ret & 0xff;
 	interrupt_status = (ret & 0x7f00) >> 8;
 
 	if (interrupt_status & 0x04) {
 		if (chip_info->en_up_down && chip_info->in_gesture_mode == 0) {
-			ret = touch_i2c_read_block(chip_info->client,
-						   0x000A, 5,
-						   &(touchold_buffer[0]));
+			ret = touch_i2c_read_block(chip_info->client, 0x000A, 5, &touchhold_flag);
 			if (ret < 0) {
-				TPD_INFO("%s,i2c error,ret = %d\n",
-					 __func__, ret);
+				TPD_INFO("%s, i2c error, ret = %d\n", __func__, ret);
 				return IRQ_EXCEPTION;
 			}
-			touchhold_flag = touchold_buffer[0];
+
 			switch (touchhold_flag) {
 			case 0x0f:
 				gf_opticalfp_irq_handler(1);
 				TPD_INFO("touchhold down\n");
 				break;
-			case  0x1f:
+			case 0x1f:
 				gf_opticalfp_irq_handler(0);
 				TPD_INFO("touchhold up\n");
 				break;
@@ -409,27 +405,26 @@ static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable,
 	}
 
 	if (device_status) {
-		TPD_INFO("%s, interrupt_status = 0x%x, device_status = 0x%x\n",
-			 __func__, interrupt_status, device_status);
+		TPD_INFO("%s, interrupt_status = 0x%x, device_status = 0x%x\n", __func__, interrupt_status, device_status);
 		return IRQ_EXCEPTION;
 	}
+
 	if (interrupt_status & 0x04) {
 		if (gesture_enable && is_suspended) {
-			if (chip_info->in_gesture_mode == 1) {
-				return IRQ_GESTURE;
-			} else {
-				return IRQ_IGNORE;
-			}
+			return (chip_info->in_gesture_mode == 1) ? IRQ_GESTURE : IRQ_IGNORE;
 		}
 		return IRQ_TOUCH;
 	}
-	if (interrupt_status & 0x10)
+
+	if (interrupt_status & 0x10) {
 		SET_BIT(result_event, IRQ_BTN_KEY);
+	}
 
 	if (interrupt_status & 0x20) {
 		TPD_INFO("interrupt_status is %d\n", interrupt_status);
 		SET_BIT(result_event, IRQ_FACE_STATE);
 	}
+
 	return result_event;
 }
 
