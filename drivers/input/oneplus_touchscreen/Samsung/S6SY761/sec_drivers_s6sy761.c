@@ -1172,87 +1172,63 @@ static inline u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 
 	event_id = chip_info->first_event[0] & 0x3;
 	if (event_id == SEC_STATUS_EVENT) {
-		/* watchdog reset -> send SENSEON command */
-		p_event_status =
-		    (struct sec_event_status *)chip_info->first_event;
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_INFO)
-		    && (p_event_status->status_id == SEC_ACK_BOOT_COMPLETE)
-		    && (p_event_status->status_data_1 == 0x20)) {
-
-			ret =
-			    touch_i2c_write_block(chip_info->client,
-						  SEC_CMD_SENSE_ON, 0, NULL);
-			if (ret < 0) {
-				TPD_INFO("%s: write sense on failed\n",
-					 __func__);
-			}
-			return IRQ_FW_AUTO_RESET;
-		}
-
-		/* event queue full-> all finger release */
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_ERR)
-		    && (p_event_status->status_id ==
-			SEC_ERR_EVENT_QUEUE_FULL)) {
-			TPD_INFO("%s: IC Event Queue is full\n", __func__);
-			tp_touch_btnkey_release();
-		}
-
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_ERR)
-		    && (p_event_status->status_id == SEC_ERR_EVENT_ESD)) {
-			TPD_INFO("%s: ESD detected. run reset\n", __func__);
-			return IRQ_EXCEPTION;
-		}
-
+		p_event_status = (struct sec_event_status *)chip_info->first_event;
 		if ((p_event_status->stype == TYPE_STATUS_EVENT_VENDOR_INFO)
-		    && (p_event_status->status_id == SEC_STATUS_EARDETECTED)) {
-			chip_info->proximity_status =
-			    p_event_status->status_data_1;
-			TPD_INFO("%s: face detect status %d\n", __func__,
-				 chip_info->proximity_status);
-			return IRQ_FACE_STATE;
-		}
-
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_VENDOR_INFO)
-		    && (p_event_status->status_id == SEC_STATUS_TOUCHHOLD)) {
-			switch (p_event_status->status_data_1) {
-			case 1:
-				g_tp->touchold_event = 1;
-				gf_opticalfp_irq_handler(1);
+			|| (p_event_status->stype == TYPE_STATUS_EVENT_INFO)) {
+			switch (p_event_status->status_id) {
+			case SEC_ACK_BOOT_COMPLETE:
+				if (p_event_status->status_data_1 == 0x20) {
+					ret = touch_i2c_write_block(chip_info->client, SEC_CMD_SENSE_ON, 0, NULL);
+					if (ret < 0) {
+						TPD_INFO("%s: write sense on failed\n", __func__);
+					}
+					return IRQ_FW_AUTO_RESET;
+				}
 				break;
-			case 0:
-				g_tp->touchold_event = 0;
-				gf_opticalfp_irq_handler(0);
-				break;
+			case SEC_STATUS_EARDETECTED:
+				chip_info->proximity_status = p_event_status->status_data_1;
+				TPD_INFO("%s: face detect status %d\n", __func__, chip_info->proximity_status);
+				return IRQ_FACE_STATE;
+			case SEC_STATUS_TOUCHHOLD:
+				switch (p_event_status->status_data_1) {
+				case 1:
+					g_tp->touchold_event = 1;
+					gf_opticalfp_irq_handler(1);
+					break;
+				case 0:
+					g_tp->touchold_event = 0;
+					gf_opticalfp_irq_handler(0);
+					break;
+				}
+				TPD_INFO("%s: touch_hold status %d\n", __func__, p_event_status->status_data_1);
+				return IRQ_IGNORE;
+			case SEC_TS_ACK_WET_MODE:
+				chip_info->wet_mode = p_event_status->status_data_1;
+				TPD_INFO("%s: water wet mode %d\n", __func__, chip_info->wet_mode);
+				return IRQ_IGNORE;
+			case SEC_TS_VENDOR_ACK_NOISE_STATUS_NOTI:
+				chip_info->touch_noise_status = ! !p_event_status->status_data_1;
+				TPD_INFO("%s: TSP NOISE MODE %s[%d]\n", __func__,
+					chip_info->touch_noise_status == 0 ? "OFF" : "ON",
+					p_event_status->status_data_1);
+				return IRQ_IGNORE;
 			}
-			TPD_INFO("%s: touch_hold status %d\n", __func__,
-				 p_event_status->status_data_1);
-			return IRQ_IGNORE;
-		}
-
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_INFO)
-		    && (p_event_status->status_id == SEC_TS_ACK_WET_MODE)) {
-			chip_info->wet_mode = p_event_status->status_data_1;
-			TPD_INFO("%s: water wet mode %d\n", __func__,
-				 chip_info->wet_mode);
-			return IRQ_IGNORE;
-		}
-		if ((p_event_status->stype == TYPE_STATUS_EVENT_VENDOR_INFO)
-		    && (p_event_status->status_id ==
-			SEC_TS_VENDOR_ACK_NOISE_STATUS_NOTI)) {
-			chip_info->touch_noise_status =
-			    ! !p_event_status->status_data_1;
-			TPD_INFO("%s: TSP NOISE MODE %s[%d]\n", __func__,
-				 chip_info->touch_noise_status ==
-				 0 ? "OFF" : "ON",
-				 p_event_status->status_data_1);
-			return IRQ_IGNORE;
+		} else if (p_event_status->stype == TYPE_STATUS_EVENT_ERR) {
+			switch (p_event_status->status_id) {
+			case SEC_ERR_EVENT_QUEUE_FULL:
+				TPD_INFO("%s: IC Event Queue is full\n", __func__);
+				tp_touch_btnkey_release();
+				break;
+			case SEC_ERR_EVENT_ESD:
+				TPD_INFO("%s: ESD detected. run reset\n", __func__);
+				return IRQ_EXCEPTION;
+			}
 		}
 	} else if (event_id == SEC_COORDINATE_EVENT) {
 		return IRQ_TOUCH;
 	} else if (event_id == SEC_GESTURE_EVENT) {
 		return IRQ_GESTURE;
 	}
-
 	return IRQ_IGNORE;
 }
 
