@@ -417,8 +417,6 @@ EXPORT_SYMBOL(opticalfp_irq_handler);
 
 int __always_inline gf_opticalfp_irq_handler(int event)
 {
-	char msgdown = 4;
-	char msgup = 5;
 	struct gf_dev *gf_dev = &gf;
 	if (gf.spi == NULL) {
 		return 0;
@@ -433,12 +431,12 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 	case 1:
 	  gf_dev->udfps_pressed = 1;
 	  sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-	  sendnlmsg(&msgdown);
+	  sendnlmsg(&(char){4});
 	  break;
 	case 0:
 	  gf_dev->udfps_pressed = 0;
 	  sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-	  sendnlmsg(&msgup);
+	  sendnlmsg(&(char){5});
 	  break;
 	}
 	pm_qos_remove_request(&gf_dev->gf_dev_req);
