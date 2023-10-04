@@ -450,13 +450,9 @@ EXPORT_SYMBOL(gf_opticalfp_irq_handler);
 static int __always_inline goodix_fb_state_chg_callback(
 	struct notifier_block *nb, unsigned long val, void *data)
 {
-	struct gf_dev *gf_dev;
 	struct msm_drm_notifier *evdata = data;
+	struct gf_dev *gf_dev;
 	unsigned int blank;
-	char msg_ui_disappear = 7;
-	char msg_ui_appear = 6;
-	char msg_fb_black = 2;
-	char msg_fb_unblack = 3;
 
 	if (val != MSM_DRM_EARLY_EVENT_BLANK &&
 		val != MSM_DRM_ONSCREENFINGERPRINT_EVENT)
@@ -467,40 +463,42 @@ static int __always_inline goodix_fb_state_chg_callback(
 
 	blank = *(int *)(evdata->data);
 
-	if (val == MSM_DRM_ONSCREENFINGERPRINT_EVENT) {
+	switch (val) {
+	case MSM_DRM_ONSCREENFINGERPRINT_EVENT:
 		switch (blank) {
 		case 0:
-			sendnlmsg(&msg_ui_disappear);
+			sendnlmsg(&(char){7});
 			break;
 		case 1:
-			sendnlmsg(&msg_ui_appear);
+			sendnlmsg(&(char){6});
 			break;
 		default:
 			break;
 		}
-		return 0;
-	}
+		break;
 
-	gf_dev = container_of(nb, struct gf_dev, msm_drm_notif);
-	if (evdata && evdata->data && val ==
-		MSM_DRM_EARLY_EVENT_BLANK && gf_dev) {
-		blank = *(int *)(evdata->data);
-		switch (blank) {
-		case MSM_DRM_BLANK_POWERDOWN:
+	case MSM_DRM_EARLY_EVENT_BLANK:
+		gf_dev = container_of(nb, struct gf_dev, msm_drm_notif);
+
+		if (evdata->data && gf_dev) {
+			blank = *(int *)(evdata->data);
+
 			if (gf_dev->device_available == 1) {
-				gf_dev->fb_black = 1;
-				sendnlmsg(&msg_fb_black);
+				switch (blank) {
+				case MSM_DRM_BLANK_POWERDOWN:
+					gf_dev->fb_black = 1;
+					sendnlmsg(&(char){2});
+					break;
+				case MSM_DRM_BLANK_UNBLANK:
+					gf_dev->fb_black = 0;
+					sendnlmsg(&(char){3});
+					break;
+				default:
+					break;
+				}
 			}
-			break;
-		case MSM_DRM_BLANK_UNBLANK:
-			if (gf_dev->device_available == 1) {
-				gf_dev->fb_black = 0;
-				sendnlmsg(&msg_fb_unblack);
-			}
-			break;
-		default:
-			break;
 		}
+		break;
 	}
 	return NOTIFY_OK;
 }
