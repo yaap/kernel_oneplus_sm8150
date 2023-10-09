@@ -101,7 +101,10 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync)
 	int cidx = 0, cpu;
 
 	/* Get the utilization for this task */
-	p_util = task_util_est(p);
+	if (task_group(p)->latency_sensitive)
+		p_util = boosted_task_util(p);
+	else
+		p_util = task_util_est(p);
 
 	/*
 	 * Find the best CPU to wake @p on. The RCU read lock is needed for
