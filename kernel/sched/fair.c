@@ -5274,11 +5274,14 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	struct sched_entity *se = &p->se;
 	int task_new = !(flags & ENQUEUE_WAKEUP);
 	int idle_h_nr_running = idle_policy(p->policy);
-	bool prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
 #ifdef CONFIG_SCHED_TUNE
-				(schedtune_prefer_idle(p) > 0) : 0;
-#elif  CONFIG_UCLAMP_TASK
-				(uclamp_latency_sensitive(p) > 0) : 0;
+	bool prefer_idle = sched_feat(EAS_PREFER_IDLE)
+				? (schedtune_prefer_idle(p) > 0) : 0;
+#elif defined  CONFIG_UCLAMP_TASK
+	bool prefer_idle = sched_feat(EAS_PREFER_IDLE)
+				? (uclamp_latency_sensitive(p) > 0) : 0;
+#else
+	bool prefer_idle = sched_feat(EAS_PREFER_IDLE);
 #endif
 
 #ifdef CONFIG_SCHED_WALT
@@ -7384,12 +7387,15 @@ static inline bool task_fits_max(struct task_struct *p, int cpu)
 		return true;
 
 	if (is_min_capacity_cpu(cpu)) {
-		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
-			task_boost > 0 ||
 #ifdef CONFIG_SCHED_TUNE
-			schedtune_task_boost(p) > 0)
-#elif  CONFIG_UCLAMP_TASK
-			uclamp_boosted(p) > 0)
+		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+			task_boost > 0 || schedtune_task_boost(p) > 0)
+#elif defined CONFIG_UCLAMP_TASK
+		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+			task_boost > 0 || uclamp_boosted(p) > 0)
+#else
+		if (task_boost_policy(p) == SCHED_BOOST_ON_BIG ||
+			task_boost > 0)
 #endif
 			return false;
 	} else { /* mid cap cpu */
@@ -8271,11 +8277,14 @@ static int find_energy_efficient_cpu(struct sched_domain *sd,
 		 * cannot be changed, it is safe to optimise out
 		 * all if(prefer_idle) blocks.
 		 */
-		prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
 #ifdef CONFIG_SCHED_TUNE
+		prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
 				(schedtune_prefer_idle(p) > 0) : 0;
-#elif  CONFIG_UCLAMP_TASK
+#elif defined CONFIG_UCLAMP_TASK
+		prefer_idle = sched_feat(EAS_PREFER_IDLE) ?
 				(uclamp_latency_sensitive(p) > 0) : 0;
+#else
+		prefer_idle = sched_feat(EAS_PREFER_IDLE);
 #endif
 		eenv->max_cpu_count = EAS_CPU_BKP + 1;
 
@@ -8389,10 +8398,13 @@ static inline int wake_energy(struct task_struct *p, int prev_cpu,
 		 */
 #ifdef CONFIG_SCHED_TUNE
 		if (schedtune_prefer_idle(p) > 0
-#elif  CONFIG_UCLAMP_TASK
-		if (uclamp_latency_sensitive(p) > 0
-#endif
 				&& !sync)
+#elif defined CONFIG_UCLAMP_TASK
+		if (uclamp_latency_sensitive(p) > 0
+				&& !sync)
+#else
+		if (!sync)
+#endif
 			return false;
 	}
 	return true;
