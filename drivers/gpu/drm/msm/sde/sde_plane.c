@@ -1475,13 +1475,8 @@ static inline void _sde_plane_mul_csc_pcc(struct sde_plane *psde,
 				sum += csc * pcc;
 			}
 
-			if (i == 2 && psde->fod_dim_alpha > 100) {
-				sum = mult_frac(sum, fod_dim_scale,
-						PCC_ONE * 270);
-			} else {
-				sum = mult_frac(sum, fod_dim_scale,
-						PCC_ONE * FOD_DIM_ALPHA_MAX);
-			}
+			sum = mult_frac(sum, fod_dim_scale,
+					PCC_ONE * FOD_DIM_ALPHA_MAX);
 
 			psde->csc_pcc_cfg.csc_mv[ij] = csc_to_unsigned(sum);
 		}
