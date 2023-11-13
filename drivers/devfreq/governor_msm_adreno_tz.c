@@ -20,6 +20,7 @@
 #include <linux/ftrace.h>
 #include <linux/mm.h>
 #include <linux/msm_adreno_devfreq.h>
+#include <linux/event_tracking.h>
 #include <asm/cacheflush.h>
 #include <drm/drm_refresh_rate.h>
 #include <soc/qcom/scm.h>
@@ -395,6 +396,11 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 			multi = 120;
 			break;
 		}
+		//small gpu input boost is done by qcom userspace, and helps considerably
+		if (time_before(jiffies, last_input_time + msecs_to_jiffies(400))
+			&& kp_active_mode() != 1)
+			multi += 40;
+
 		scm_data[2] = priv->bin.busy_time * (multi / 100);
 		scm_data[3] = context_count;
 		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
