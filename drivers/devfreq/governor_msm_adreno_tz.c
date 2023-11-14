@@ -396,10 +396,15 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 			multi = 120;
 			break;
 		}
-		//small gpu input boost is done by qcom userspace, and helps considerably
-		if (time_before(jiffies, last_input_time + msecs_to_jiffies(400))
-			&& kp_active_mode() != 1)
+		//small gpu util boost at app open
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1200))
+			&& kp_active_mode() != 1) {
+			multi += 80;
+		//small gpu util boost at input
+		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(700))
+			&& kp_active_mode() != 1) {
 			multi += 40;
+		}
 
 		scm_data[2] = priv->bin.busy_time * (multi / 100);
 		scm_data[3] = context_count;
