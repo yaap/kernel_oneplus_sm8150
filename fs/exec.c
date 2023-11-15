@@ -1723,10 +1723,6 @@ static void android_service_blacklist(const char *name)
 		size_t len;
 	} static const blacklist[] = {
 		FULL("/vendor/bin/msm_irqbalance"),
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-		PREFIX("vendor/bin/hw/vendor.qti.hardware.perf"),
-		PREFIX("vendor/bin/hw/vendor.qti.hardware.iop"),
-#endif
 	};
 #undef FULL
 #undef PREFIX
