@@ -381,32 +381,24 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 			priv->bin.busy_time > CEILING) {
 		val = -1 * level;
 	} else {
-		unsigned int multi;
+		unsigned int multi = 100;
 
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
-		switch (kp_active_mode()) {
-		case 1:
-			multi = 100;
-			break;
-		case 3:
-			multi = 150;
-			break;
-		default:
-			multi = 120;
-			break;
-		}
 		//small gpu util boost at app open
 		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1200))
 			&& kp_active_mode() != 1) {
-			multi += 80;
+			multi += 140;
 		//small gpu util boost at input
 		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(700))
 			&& kp_active_mode() != 1) {
-			multi += 40;
+			multi += 100;
 		}
 
-		scm_data[2] = priv->bin.busy_time * (multi / 100);
+		if (multi != 100)
+			scm_data[2] = priv->bin.busy_time * (multi / 100);
+		else
+			scm_data[2] = priv->bin.busy_time;
 		scm_data[3] = context_count;
 		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
 					&val, sizeof(val), priv);
