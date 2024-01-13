@@ -30,6 +30,7 @@
 #include "msm_bus_core.h"
 #include "msm_bus_adhoc.h"
 
+#define CREATE_TRACE_POINTS
 #include <trace/events/trace_msm_bus.h>
 
 #define MAX_BUFF_SIZE 4096
