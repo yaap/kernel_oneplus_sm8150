@@ -390,24 +390,27 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 			priv->bin.busy_time > ceiling) {
 		val = -1 * level;
 	} else {
-		unsigned int multi = 100;
-
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
-		//small gpu util boost at app open
-		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1200))
-			&& kp_active_mode() != 1) {
-			multi += 140;
-		//small gpu util boost at input
-		} else if (time_before(jiffies, last_input_time + msecs_to_jiffies(700))
-			&& kp_active_mode() != 1) {
-			multi += 100;
+		switch (kp_active_mode()) {
+		case 2:
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1200)))
+				scm_data[2] = priv->bin.busy_time * 1.8;
+			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(3000)))
+				scm_data[2] = priv->bin.busy_time * 1.5;
+			else
+				scm_data[2] = priv->bin.busy_time;
+		case 3:
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
+				scm_data[2] = priv->bin.busy_time * 2.5;
+			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
+				scm_data[2] = priv->bin.busy_time * 2.0;
+			else
+				scm_data[2] = priv->bin.busy_time;
+		default:
+			scm_data[2] = priv->bin.busy_time;
 		}
 
-		if (multi != 100)
-			scm_data[2] = priv->bin.busy_time * (multi / 100);
-		else
-			scm_data[2] = priv->bin.busy_time;
 		scm_data[3] = context_count;
 		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
 					&val, sizeof(val), priv);
