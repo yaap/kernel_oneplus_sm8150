@@ -182,6 +182,7 @@ VDSO_LDFLAGS = -shared $(call ld-option, --hash-style=both) \
 	$(call ld-option, --build-id) $(call ld-option, --eh-frame-hdr) \
 	-Bsymbolic -z noexecstack
 GCOV_PROFILE := n
+PGO_PROFILE := n
 
 #
 # Install the unstripped copies of vdso*.so.  If our toolchain supports

@@ -12,6 +12,9 @@ sha1_ni_supported :=$(call as-instr,sha1msg1 %xmm0$(comma)%xmm1,yes,no)
 sha256_ni_supported :=$(call as-instr,sha256msg1 %xmm0$(comma)%xmm1,yes,no)
 
 obj-$(CONFIG_CRYPTO_GLUE_HELPER_X86) += glue_helper.o
+# Disable PGO for curve25519-x86_64. With PGO enabled, clang runs out of
+# registers for some of the functions.
+PGO_PROFILE_curve25519-x86_64.o := n
 
 obj-$(CONFIG_CRYPTO_AES_586) += aes-i586.o
 obj-$(CONFIG_CRYPTO_TWOFISH_586) += twofish-i586.o

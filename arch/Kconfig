@@ -1155,3 +1155,4 @@ config RELR
 	  are compatible).
 
 source "kernel/gcov/Kconfig"
+source "kernel/pgo/Kconfig"
