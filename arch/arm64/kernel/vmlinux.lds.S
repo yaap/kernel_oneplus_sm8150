@@ -227,6 +227,7 @@ SECTIONS
 		__mmuoff_data_end = .;
 	}
 
+	PGO_CLANG_DATA
 	PECOFF_EDATA_PADDING
 	__pecoff_data_rawsize = ABSOLUTE(. - __initdata_begin);
 	_edata = .;
@@ -254,9 +255,8 @@ SECTIONS
 
 	STABS_DEBUG
 
-	PGO_CLANG_DATA
-
 	HEAD_SYMBOLS
+
 }
 
 /*
