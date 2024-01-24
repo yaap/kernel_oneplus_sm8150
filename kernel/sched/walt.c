@@ -3148,9 +3148,9 @@ static int kp_mode_notifier_callback(struct notifier_block *nb, unsigned long ev
 				scale_demand(sched_init_task_load_windows);
 			break;
 		case 3:
-			sched_ravg_window == 6000000;
-			sched_group_upmigrate = pct_to_min_scaled(85);
-			sched_group_downmigrate = pct_to_min_scaled(75);
+			sched_ravg_window == 4000000;
+			sched_group_upmigrate = pct_to_min_scaled(80);
+			sched_group_downmigrate = pct_to_min_scaled(70);
 			sched_init_task_load_windows =
 				div64_u64((u64)10 *
 					(u64)sched_ravg_window, 100);
@@ -3158,12 +3158,11 @@ static int kp_mode_notifier_callback(struct notifier_block *nb, unsigned long ev
 				scale_demand(sched_init_task_load_windows);
 			break;
 		default:
-			sched_ravg_window == 12000000;
-			sched_group_upmigrate = pct_to_min_scaled(98);
-			sched_group_downmigrate = pct_to_min_scaled(90);
+			sched_ravg_window == 6000000;
+			sched_group_upmigrate = pct_to_min_scaled(85);
+			sched_group_downmigrate = pct_to_min_scaled(75);
 			sched_init_task_load_windows =
-				div64_u64((u64)5 *
-					(u64)sched_ravg_window, 100);
+				div64_u64((u64)sched_ravg_window, 100);
 			sched_init_task_load_windows_scaled =
 				scale_demand(sched_init_task_load_windows);
 			break;
