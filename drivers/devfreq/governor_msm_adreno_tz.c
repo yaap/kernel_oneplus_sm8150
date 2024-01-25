@@ -393,18 +393,25 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 		scm_data[0] = level;
 		scm_data[1] = priv->bin.total_time;
 		switch (kp_active_mode()) {
-		case 2:
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(1200)))
+		case 0:
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
+				scm_data[2] = priv->bin.busy_time * 2.2;
+			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
 				scm_data[2] = priv->bin.busy_time * 1.8;
-			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(3000)))
-				scm_data[2] = priv->bin.busy_time * 1.5;
+			else
+				scm_data[2] = priv->bin.busy_time;
+		case 2:
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
+				scm_data[2] = priv->bin.busy_time * 2.2;
+			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
+				scm_data[2] = priv->bin.busy_time * 1.8;
 			else
 				scm_data[2] = priv->bin.busy_time;
 		case 3:
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
-				scm_data[2] = priv->bin.busy_time * 2.5;
-			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
-				scm_data[2] = priv->bin.busy_time * 2.0;
+			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(3000)))
+				scm_data[2] = priv->bin.busy_time * 3.0;
+			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(9000)))
+				scm_data[2] = priv->bin.busy_time * 2.2;
 			else
 				scm_data[2] = priv->bin.busy_time;
 		default:
