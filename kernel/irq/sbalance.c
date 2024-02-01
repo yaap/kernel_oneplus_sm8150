@@ -224,7 +224,7 @@ extern void balance_irqs(void)
 	for_each_cpu(cpu, &cpus) {
 		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
 		per_cpu(cpu_cap, cpu) = arch_scale_cpu_capacity(NULL, cpu) *
-					policy->min / policy->cpuinfo.max_freq;
+					policy->min / policy->max;
 		cpufreq_cpu_put(policy);
 	}
 
