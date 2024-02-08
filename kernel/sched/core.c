@@ -966,9 +966,9 @@ static inline void uclamp_boost_write(struct task_struct *p) {
 	//top-app min clamp input boost
 	if (strcmp(css->cgroup->kn->name, "top-app") == 0) {
 		if (kp_active_mode() == 3 || time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 461;
+			task_group(p)->uclamp[UCLAMP_MIN].value = 512;
 		} else {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 204;
+			task_group(p)->uclamp[UCLAMP_MIN].value = 358;
 		}
 	}
 #ifdef CONFIG_STOCKISH_ROM_SUPPORT
