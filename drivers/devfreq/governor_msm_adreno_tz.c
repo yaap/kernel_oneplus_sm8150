@@ -399,21 +399,21 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
 				scm_data[2] = priv->bin.busy_time * 1.8;
 			else
-				scm_data[2] = priv->bin.busy_time;
+				scm_data[2] = priv->bin.busy_time * 1.5;
 		case 2:
 			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
 				scm_data[2] = priv->bin.busy_time * 2.2;
 			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
 				scm_data[2] = priv->bin.busy_time * 1.8;
 			else
-				scm_data[2] = priv->bin.busy_time;
+				scm_data[2] = priv->bin.busy_time * 1.5;
 		case 3:
 			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(3000)))
 				scm_data[2] = priv->bin.busy_time * 3.0;
 			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(9000)))
 				scm_data[2] = priv->bin.busy_time * 2.2;
 			else
-				scm_data[2] = priv->bin.busy_time;
+				scm_data[2] = priv->bin.busy_time * 1.8;
 		default:
 			scm_data[2] = priv->bin.busy_time;
 		}
