@@ -32,7 +32,6 @@
 #include <linux/delay.h>
 
 #include <linux/kthread.h>
-#include <linux/event_tracking.h>
 
 #include <asm/switch_to.h>
 #include <linux/msm_rtb.h>
@@ -955,55 +954,13 @@ static void uclamp_sync_util_min_rt_default(void)
 	rcu_read_unlock();
 }
 
-extern int kp_active_mode(void);
-
-static inline void uclamp_boost_write(struct task_struct *p) {
-	struct cgroup_subsys_state *css = task_css(p, cpu_cgrp_id);
-	int min_value = 0;
-	int max_value = 0;
-	int latency_sensitive = 0;
-
-	//top-app min clamp input boost
-	if (strcmp(css->cgroup->kn->name, "top-app") == 0) {
-		if (kp_active_mode() == 3 || time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 512;
-		} else {
-			task_group(p)->uclamp[UCLAMP_MIN].value = 358;
-		}
-	}
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-	else {
-		if (strcmp(css->cgroup->kn->name, "foreground") == 0) {
-			max_value = 512;
-		} else if (strcmp(css->cgroup->kn->name, "background") == 0) {
-			min_value = 205;
-			max_value = 1024;
-		} else if (strcmp(css->cgroup->kn->name, "system-background") == 0) {
-			max_value = 410;
-		} else if (strcmp(css->cgroup->kn->name, "nnapi-hal") == 0) {
-			min_value = 768;
-			max_value = 1024;
-			latency_sensitive = 1;
-		} else if (strcmp(css->cgroup->kn->name, "camera-daemon") == 0) {
-			min_value = 512;
-			max_value = 1024;
-			latency_sensitive = 1;
-		}
-		task_group(p)->latency_sensitive = latency_sensitive;
-		if (min_value)
-			task_group(p)->uclamp[UCLAMP_MIN].value = min_value;
-		if (max_value)
-			task_group(p)->uclamp[UCLAMP_MAX].value = max_value;
-	}
-#endif
-}
-
 static inline struct uclamp_se
 uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 {
 	/* Copy by value as we could modify it */
 	struct uclamp_se uc_req = p->uclamp_req[clamp_id];
 #ifdef CONFIG_UCLAMP_TASK_GROUP
+	struct cgroup_subsys_state *css;
 	unsigned int tg_min, tg_max, value;
 
 	/*
@@ -1015,15 +972,8 @@ uclamp_tg_restrict(struct task_struct *p, enum uclamp_id clamp_id)
 	if (task_group(p) == &root_task_group)
 		return uc_req;
 
-	//battery kprofile optimization
-	if (kp_active_mode() == 1) {
-		tg_min = 0;
-	} else {
-		//Run for clamp boosting
-		uclamp_boost_write(p);
-		tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
-	}
 	tg_max = task_group(p)->uclamp[UCLAMP_MAX].value;
+	tg_min = task_group(p)->uclamp[UCLAMP_MIN].value;
 	value = uc_req.value;
 	value = clamp(value, tg_min, tg_max);
 	uclamp_se_set(&uc_req, value, false);
