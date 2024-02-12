@@ -38,16 +38,6 @@ static DEFINE_SPINLOCK(tz_lock);
 #define MIN_BUSY		1000
 #define MAX_TZ_VERSION		0
 
-/*
- * CEILING is 50msec, larger than any standard
- * frame length, but less than the idle timer.
- */
-#define CEILING			33500
-/*
- * optimized ceiling to benefit gpu processing with quick drops in utilization
- * example being gpu accelerated encoding
- */
-#define CEILING_OPT		25125
 #define TZ_RESET_ID		0x3
 #define TZ_UPDATE_ID		0x4
 #define TZ_INIT_ID		0x6
@@ -343,7 +333,6 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 	int val, level = 0;
 	unsigned int scm_data[4];
 	int context_count = 0;
-	unsigned int ceiling = CEILING_OPT;
 
 	/* keeps stats.private_data == NULL   */
 	result = devfreq->profile->get_dev_status(devfreq->dev.parent, &stats);
@@ -379,49 +368,37 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 		return level;
 	}
 
-	if (kp_active_mode() == 1)
-		ceiling = CEILING;
-
-	/*
-	 * If there is an extended block of busy processing,
-	 * increase frequency.  Otherwise run the normal algorithm.
-	 */
-	if (!priv->disable_busy_time_burst &&
-			priv->bin.busy_time > ceiling) {
-		val = -1 * level;
-	} else {
-		scm_data[0] = level;
-		scm_data[1] = priv->bin.total_time;
-		switch (kp_active_mode()) {
-		case 0:
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
-				scm_data[2] = priv->bin.busy_time * 2.2;
-			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
-				scm_data[2] = priv->bin.busy_time * 1.8;
-			else
-				scm_data[2] = priv->bin.busy_time;
-		case 2:
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)))
-				scm_data[2] = priv->bin.busy_time * 2.2;
-			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(5000)))
-				scm_data[2] = priv->bin.busy_time * 1.8;
-			else
-				scm_data[2] = priv->bin.busy_time;
-		case 3:
-			if (time_before(jiffies, last_mb_time + msecs_to_jiffies(3000)))
-				scm_data[2] = priv->bin.busy_time * 3.0;
-			else if (time_before(jiffies, last_input_time + msecs_to_jiffies(9000)))
-				scm_data[2] = priv->bin.busy_time * 2.2;
-			else
-				scm_data[2] = priv->bin.busy_time;
-		default:
-			scm_data[2] = priv->bin.busy_time;
+	scm_data[0] = level;
+	scm_data[1] = priv->bin.total_time;
+	switch (kp_active_mode()) {
+	case 0:
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)) ||
+		time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+			val = -1 * level;
 		}
-
-		scm_data[3] = context_count;
-		__secure_tz_update_entry3(scm_data, sizeof(scm_data),
-					&val, sizeof(val), priv);
+		scm_data[2] = priv->bin.busy_time * 220 / 100;
+	break;
+	case 2:
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)) ||
+		time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+			val = -1 * level;
+		}
+		scm_data[2] = priv->bin.busy_time * 220 / 100;
+	break;
+	case 3:
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(3000)) ||
+		time_before(jiffies, last_input_time + msecs_to_jiffies(6000))) {
+			val = -1 * level;
+		}
+		scm_data[2] = priv->bin.busy_time * 250 / 100;
+	break;
+	default:
+		scm_data[2] = priv->bin.busy_time;
 	}
+
+	scm_data[3] = context_count;
+	__secure_tz_update_entry3(scm_data, sizeof(scm_data),
+				&val, sizeof(val), priv);
 	priv->bin.total_time = 0;
 	priv->bin.busy_time = 0;
 
