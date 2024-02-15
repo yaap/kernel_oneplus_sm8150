@@ -5075,6 +5075,7 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (!panel->aod_state) {
+		panel->aod_state = true;
 		if (cur_bl > 90)
 			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
 		else
@@ -5083,8 +5084,6 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		if (rc)
 			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
 			       panel->name, rc);
-		else
-			panel->aod_state = true;
 	}
 
 	panel->need_power_on_backlight = true;
@@ -5120,6 +5119,7 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (!panel->aod_state) {
+		panel->aod_state = true;
 		if (cur_bl > 90)
 			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
 		else
@@ -5128,8 +5128,6 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 		if (rc)
 			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
 			       panel->name, rc);
-		else
-			panel->aod_state = true;
 	}
 
 	panel->need_power_on_backlight = true;
@@ -5165,12 +5163,11 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (panel->aod_state) {
+		panel->aod_state = false;
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_OFF);
 		if (rc)
 			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_OFF cmd, rc=%d\n",
 			       panel->name, rc);
-		else
-			panel->aod_state = false;
 	}
 exit:
 	mutex_unlock(&panel->panel_lock);
