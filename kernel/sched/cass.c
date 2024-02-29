@@ -94,24 +94,31 @@ done:
 static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync)
 {
 	/* Initialize @best such that @best always has a valid CPU at the end */
-	struct cass_cpu_cand cands[2], *best = cands, *curr;
-	struct cpuidle_state *idle_state;
+	struct cass_cpu_cand cands[2], *best = cands;
 	bool has_idle = false;
 	unsigned long p_util;
 	int cidx = 0, cpu;
 
 	/* Get the utilization for this task */
-	p_util = boosted_task_util(p);
+	p_util = clamp(task_util_est(p),
+		       uclamp_eff_value(p, UCLAMP_MIN),
+		       uclamp_eff_value(p, UCLAMP_MAX));
 
 	/*
-	 * Find the best CPU to wake @p on. The RCU read lock is needed for
-	 * idle_get_state().
+	 * Find the best CPU to wake @p on. Although idle_get_state() requires
+	 * an RCU read lock, an RCU read lock isn't needed because we're not
+	 * preemptible and RCU-sched is unified with normal RCU. Therefore,
+	 * non-preemptible contexts are implicitly RCU-safe.
+	 *
+	 * Note: @curr->cpu must be initialized before this loop ends. This is
+	 * necessary to ensure @best->cpu contains a valid CPU upon returning;
+	 * otherwise, if only one CPU is allowed and it is skipped before
+	 * @curr->cpu is set, then @best->cpu will be garbage.
 	 */
-	rcu_read_lock();
-	for_each_cpu_and(cpu, &p->cpus_allowed, cpu_active_mask) {
-		/* Use the free candidate slot */
-		curr = &cands[cidx];
-		curr->cpu = cpu;
+	for_each_cpu_and(cpu, p->cpus_ptr, cpu_active_mask) {
+		/* Use the free candidate slot for @curr */
+		struct cass_cpu_cand *curr = &cands[cidx];
+		struct cpuidle_state *idle_state;
 
 		/*
 		 * Check if this CPU is idle or only has SCHED_IDLE tasks. For
@@ -165,20 +172,19 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync)
 		 * If @best == @curr then there's no need to compare them, but
 		 * cidx still needs to be changed to the other candidate slot.
 		 */
+		curr->cpu = cpu;
 		if (best == curr ||
 		    cass_cpu_better(curr, best, prev_cpu, sync)) {
 			best = curr;
 			cidx ^= 1;
 		}
 	}
-	rcu_read_unlock();
 
 	return best->cpu;
 }
 
 static int cass_select_task_rq_fair(struct task_struct *p, int prev_cpu,
-				    int sd_flag, int wake_flags,
-				    int sibling_count_hint)
+				    int sd_flag, int wake_flags)
 {
 	bool sync;
 
@@ -191,8 +197,8 @@ static int cass_select_task_rq_fair(struct task_struct *p, int prev_cpu,
 	 * first valid CPU since it's possible for certain types of tasks to run
 	 * on inactive CPUs.
 	 */
-	if (unlikely(!cpumask_intersects(&p->cpus_allowed, cpu_active_mask)))
-		return cpumask_first(&p->cpus_allowed);
+	if (unlikely(!cpumask_intersects(p->cpus_ptr, cpu_active_mask)))
+		return cpumask_first(p->cpus_ptr);
 
 	/* cass_best_cpu() needs the task's utilization, so sync it up */
 	if (!(sd_flag & SD_BALANCE_FORK))
