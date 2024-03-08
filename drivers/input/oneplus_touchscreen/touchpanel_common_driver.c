@@ -60,9 +60,6 @@ static int pointy[2] = { 0, 0 };
 
 #define ABS(a,b) ((a - b > 0) ? a - b : b - a)
 
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-static uint8_t DouTap_enable = 1;		// double tap
-#endif
 static uint8_t UpVee_enable = 1;		// V
 static uint8_t LeftVee_enable = 1;		// >
 static uint8_t RightVee_enable = 1;		// <
@@ -397,10 +394,6 @@ static inline void tp_gesture_handle(struct touchpanel_data *ts)
 	ts->ts_ops->get_gesture_info(ts->chip_data, &gesture_info_temp);
 	tp_geture_info_transform(&gesture_info_temp, &ts->resolution_info);
 	ts->double_tap_pressed = (sec_double_tap(&gesture_info_temp) == 1) ? 1 : 0;
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-	if (ts->double_tap_pressed)
-		gesture_info_temp.gesture_type = DouTap;
-#endif
 
 	sysfs_notify(&ts->client->dev.kobj, NULL, "double_tap_pressed");
 	TPD_INFO("detect %s gesture\n",
@@ -423,12 +416,6 @@ static inline void tp_gesture_handle(struct touchpanel_data *ts)
 		 Wgestrue ? "(W)" : "unknown");
 
 	switch (gesture_info_temp.gesture_type) {
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-		case DouTap:
-			enabled = DouTap_enable;
-			key = KEY_DOUBLE_TAP;
-			break;
-#endif
 		case UpVee:
 			enabled = UpVee_enable;
 			key = KEY_GESTURE_DOWN_ARROW;
@@ -1012,9 +999,6 @@ static inline ssize_t proc_gesture_control_write(struct file *file,
 	LeftVee_enable = (buf[0] & BIT3) ? 1 : 0;
 	RightVee_enable = (buf[0] & BIT4) ? 1 : 0;
 	Circle_enable = (buf[0] & BIT6) ? 1 : 0;
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-	DouTap_enable = (buf[0] & BIT7) ? 1 : 0;
-#endif
 	Sgestrue_enable = (buf[1] & BIT0) ? 1 : 0;
 	Mgestrue_enable = (buf[1] & BIT1) ? 1 : 0;
 	Wgestrue_enable = (buf[1] & BIT2) ? 1 : 0;
@@ -1022,11 +1006,7 @@ static inline ssize_t proc_gesture_control_write(struct file *file,
 	Enable_gesture = (buf[1] & BIT7) ? 1 : 0;
 
 	if (UpVee_enable || DouSwip_enable || LeftVee_enable || RightVee_enable
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-	    || Circle_enable || DouTap_enable || Sgestrue_enable
-#else
 	    || Circle_enable || Sgestrue_enable
-#endif
 	    || Mgestrue_enable || Wgestrue_enable || SingleTap_enable
 	    || Enable_gesture) {
 		value = 1;
@@ -2060,9 +2040,6 @@ static DEVICE_ATTR(tp_fw_update, 0644, sec_update_fw_show, sec_update_fw_store);
 	    .owner = THIS_MODULE, \
 	};
 
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-GESTURE_ATTR(double_tap, DouTap_enable);
-#endif
 GESTURE_ATTR(down_arrow, UpVee_enable);
 GESTURE_ATTR(left_arrow, LeftVee_enable);
 GESTURE_ATTR(right_arrow, RightVee_enable);
@@ -2135,9 +2112,6 @@ static int init_touchpanel_proc(struct touchpanel_data *ts)
 			TPD_INFO("%s: Couldn't create proc entry, %d\n",
 				 __func__, __LINE__);
 		}
-#ifdef CONFIG_STOCKISH_ROM_SUPPORT
-        	CREATE_GESTURE_NODE(double_tap);
-#endif
         	CREATE_GESTURE_NODE(down_arrow);
         	CREATE_GESTURE_NODE(left_arrow);
         	CREATE_GESTURE_NODE(right_arrow);
