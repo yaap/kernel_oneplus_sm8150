@@ -62,6 +62,9 @@ struct erofs_sb_info {
 	/* the dedicated workstation for compression */
 	struct radix_tree_root workstn_tree;
 
+	/* strategy of sync decompression (false - auto, true - force on) */
+	bool readahead_sync_decompress;
+
 	/* threshold for decompression synchronously */
 	unsigned int max_sync_decompress_pages;
 
@@ -418,7 +421,8 @@ int __init z_erofs_init_zip_subsystem(void);
 void z_erofs_exit_zip_subsystem(void);
 int erofs_try_to_free_all_cached_pages(struct erofs_sb_info *sbi,
 				       struct erofs_workgroup *egrp);
-int erofs_try_to_free_cached_page(struct page *page);
+int erofs_try_to_free_cached_page(struct address_space *mapping,
+				  struct page *page);
 int z_erofs_load_lz4_config(struct super_block *sb,
 			    struct erofs_super_block *dsb,
 			    struct z_erofs_lz4_cfgs *lz4, int len);

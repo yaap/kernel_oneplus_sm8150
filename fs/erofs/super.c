@@ -380,6 +380,7 @@ static void erofs_default_options(struct erofs_sb_info *sbi)
 #ifdef CONFIG_EROFS_FS_ZIP
 	sbi->cache_strategy = EROFS_ZIP_CACHE_READAROUND;
 	sbi->max_sync_decompress_pages = 3;
+	sbi->readahead_sync_decompress = false;
 #endif
 #ifdef CONFIG_EROFS_FS_XATTR
 	set_opt(sbi, XATTR_USER);
@@ -481,7 +482,7 @@ static int erofs_managed_cache_releasepage(struct page *page, gfp_t gfp_mask)
 	DBG_BUGON(mapping->a_ops != &managed_cache_aops);
 
 	if (PagePrivate(page))
-		ret = erofs_try_to_free_cached_page(page);
+		ret = erofs_try_to_free_cached_page(mapping, page);
 
 	return ret;
 }

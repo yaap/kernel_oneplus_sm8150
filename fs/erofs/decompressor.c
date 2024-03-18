@@ -115,14 +115,8 @@ static int z_erofs_lz4_prepare_destpages(struct z_erofs_decompress_req *rq,
 			victim = availables[--top];
 			get_page(victim);
 		} else {
-			/*
-			 * Direct reclaim and I/O can deadlock from here, but
-			 * the allocation must not fail. As such, loop with
-			 * GFP_NOWAIT until the allocation succeeds.
-			 */
-			while (!(victim = erofs_allocpage(pagepool,
-							  GFP_NOWAIT |
-							  __GFP_NOWARN)));
+			victim = erofs_allocpage(pagepool,
+						 GFP_KERNEL | __GFP_NOFAIL);
 			set_page_private(victim, Z_EROFS_SHORTLIVED_PAGE);
 		}
 		rq->out[i] = victim;
@@ -219,7 +213,6 @@ static int z_erofs_lz4_decompress(struct z_erofs_decompress_req *rq, u8 *out,
 		erofs_err(rq->sb, "failed to decompress %d in[%u, %u] out[%u]",
 			  ret, inlen, inputmargin, rq->outputsize);
 
-		WARN_ON(1);
 		print_hex_dump(KERN_DEBUG, "[ in]: ", DUMP_PREFIX_OFFSET,
 			       16, 1, src + inputmargin, inlen, true);
 		print_hex_dump(KERN_DEBUG, "[out]: ", DUMP_PREFIX_OFFSET,
