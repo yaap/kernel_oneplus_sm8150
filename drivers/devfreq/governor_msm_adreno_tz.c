@@ -372,15 +372,13 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 	scm_data[1] = priv->bin.total_time;
 	switch (kp_active_mode()) {
 	case 0:
-		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)) ||
-		time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(300))) {
 			val = -1 * level;
 		}
 		scm_data[2] = priv->bin.busy_time * 220 / 100;
 	break;
 	case 2:
-		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(2000)) ||
-		time_before(jiffies, last_input_time + msecs_to_jiffies(5000))) {
+		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(300))) {
 			val = -1 * level;
 		}
 		scm_data[2] = priv->bin.busy_time * 220 / 100;
