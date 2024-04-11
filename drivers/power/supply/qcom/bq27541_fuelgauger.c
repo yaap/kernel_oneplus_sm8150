@@ -256,6 +256,8 @@ struct bq27541_device_info {
 	bool already_modify_smooth;
 #endif
 	bool bat_4p45v;
+	int rem_cap;
+	int chg_cap;
 };
 
 #include <linux/workqueue.h>
@@ -891,6 +893,9 @@ static int bq27541_remaining_capacity(struct bq27541_device_info *di)
 			pr_debug("error reading capacity.\n");
 			return ret;
 		}
+		di->rem_cap = cap;
+	} else if (di->rem_cap) {
+		return di->rem_cap;
 	}
 
 	return cap;
@@ -913,6 +918,9 @@ static int bq27541_full_chg_capacity(struct bq27541_device_info *di)
 			pr_debug("error reading full chg capacity.\n");
 			return ret;
 		}
+		di->chg_cap = cap;
+	} else if (di->chg_cap) {
+		return di->chg_cap;
 	}
 
 	return cap;
