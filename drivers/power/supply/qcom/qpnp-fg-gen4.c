@@ -4531,7 +4531,12 @@ static int fg_psy_get_property(struct power_supply *psy,
 			pval->intval = (int)temp;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
-		rc = fg_gen4_get_charge_counter(chip, &pval->intval);
+		if (!get_extern_fg_regist_done() && get_extern_bq_present())
+			rc = fg_gen4_get_charge_counter(chip, &pval->intval);
+		else if (fg->use_external_fg && external_fg && external_fg->get_batt_remaining_capacity)
+			pval->intval = external_fg->get_batt_remaining_capacity() * 1000;
+		else
+			rc = fg_gen4_get_charge_counter(chip, &pval->intval);
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER_SHADOW:
 		rc = fg_gen4_get_charge_counter_shadow(chip, &pval->intval);
