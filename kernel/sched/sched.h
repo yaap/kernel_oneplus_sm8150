@@ -2292,7 +2292,8 @@ static inline unsigned long cpu_util_rt(struct rq *rq)
 static inline unsigned long
 cpu_util_freq(int cpu, struct sched_walt_cpu_load *walt_load)
 {
-	return min(cpu_util(cpu) + cpu_util_rt(cpu), capacity_orig_of(cpu));
+	struct rq *rq = cpu_rq(cpu);
+	return min(cpu_util(cpu) + cpu_util_rt(rq), capacity_orig_of(cpu));
 }
 
 #define sched_ravg_window TICK_NSEC
