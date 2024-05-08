@@ -639,7 +639,6 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 	int blank;
 	struct dsi_panel *panel = sde_connector_panel(c_conn);
 	int rr = panel->cur_mode->timing.refresh_rate;
-	int level = 0;
 	bool status = sde_connector_is_fod_enabled(c_conn);
 
 	if (status == dsi_panel_get_fod_ui(panel) || !panel)
@@ -647,7 +646,6 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 
 	if (status) {
 		blank = 1;
-		level = 5;
 		cpu_input_boost_kick_max(1200, true);
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
 		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200, true);
@@ -663,14 +661,8 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 		blank = 0;
 	}
 
-	if (rr > 60) {
-		notifier_data.data = &blank;
-		notifier_data.id = connector_state_crtc_index;
-		msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT, &notifier_data);
-	}
-
 	if (!was_hbm) {
-		dsi_panel_set_hbm_mode(panel, level);
+		dsi_panel_set_hbm_mode(panel, status ? 5 : 0);
 
 		if (status && (panel->hw_type == DSI_PANEL_SAMSUNG_SOFEF03F_M))
 			sde_encoder_wait_for_event(c_conn->encoder,
@@ -683,11 +675,9 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 	if (!status && !was_hbm)
 		_sde_connector_update_bl_scale(c_conn);
 
-	if (rr < 90) {
-		notifier_data.data = &blank;
-		notifier_data.id = connector_state_crtc_index;
-		msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT, &notifier_data);
-	}
+	notifier_data.data = &blank;
+	notifier_data.id = connector_state_crtc_index;
+	msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT, &notifier_data);
 }
 
 int sde_connector_pre_kickoff(struct drm_connector *connector)
