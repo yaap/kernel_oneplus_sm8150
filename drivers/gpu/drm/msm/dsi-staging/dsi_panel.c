@@ -5789,16 +5789,11 @@ int dsi_panel_post_unprepare(struct dsi_panel *panel)
 	mutex_unlock(&panel->panel_lock);
 	return rc;
 }
-int dsi_panel_set_hbm_mode(struct dsi_panel *panel, int level)
+int __always_inline dsi_panel_set_hbm_mode(struct dsi_panel *panel, int level)
 {
 	int rc = 0;
 	u32 count;
 	struct dsi_display_mode *mode;
-
-	if (!panel || !panel->cur_mode) {
-		pr_debug("Invalid params\n");
-		return -EINVAL;
-	}
 
 	mode = panel->cur_mode;
 
