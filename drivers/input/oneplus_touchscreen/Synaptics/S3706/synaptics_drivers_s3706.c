@@ -3817,18 +3817,6 @@ static int synaptics_tp_probe(struct i2c_client *client,
 		register_remote_device(premote_data);
 	}
 #endif
-
-	ts->pm_i2c_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_i2c_req.irq = geni_i2c_get_adap_irq(client);
-	irq_set_perf_affinity(ts->pm_i2c_req.irq, IRQF_PRIME_AFFINE);
-	pm_qos_add_request(&ts->pm_i2c_req, PM_QOS_CPU_DMA_LATENCY,
-		PM_QOS_DEFAULT_VALUE);
-
-	ts->pm_touch_req.type = PM_QOS_REQ_AFFINE_IRQ;
-	ts->pm_touch_req.irq = client->irq;
-	pm_qos_add_request(&ts->pm_touch_req, PM_QOS_CPU_DMA_LATENCY,
-		PM_QOS_DEFAULT_VALUE);
-
 	TPD_INFO("%s, probe normal end\n", __func__);
 
 	return 0;
@@ -3855,9 +3843,6 @@ static int synaptics_tp_remove(struct i2c_client *client)
 #ifdef CONFIG_SYNAPTIC_RED
 	unregister_remote_device();
 #endif
-	pm_qos_remove_request(&ts->pm_touch_req);
-	pm_qos_remove_request(&ts->pm_i2c_req);
-	
 	kfree(ts);
 
 	return 0;
