@@ -1190,17 +1190,8 @@ static inline u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 				TPD_INFO("%s: face detect status %d\n", __func__, chip_info->proximity_status);
 				return IRQ_FACE_STATE;
 			case SEC_STATUS_TOUCHHOLD:
-				switch (p_event_status->status_data_1) {
-				case 1:
-					g_tp->touchold_event = 1;
-					gf_opticalfp_irq_handler(1);
-					break;
-				case 0:
-					g_tp->touchold_event = 0;
-					gf_opticalfp_irq_handler(0);
-					break;
-				}
-				TPD_INFO("%s: touch_hold status %d\n", __func__, p_event_status->status_data_1);
+				g_tp->touchold_event = p_event_status->status_data_1;
+				gf_opticalfp_irq_handler(p_event_status->status_data_1);
 				return IRQ_IGNORE;
 			case SEC_TS_ACK_WET_MODE:
 				chip_info->wet_mode = p_event_status->status_data_1;
