@@ -390,17 +390,9 @@ static inline u8 synaptics_trigger_reason(void *chip_data, int gesture_enable, i
 				TPD_INFO("%s, i2c error, ret = %d\n", __func__, ret);
 				return IRQ_EXCEPTION;
 			}
-
-			switch (touchhold_flag) {
-			case 0x0f:
-				gf_opticalfp_irq_handler(1);
-				TPD_INFO("touchhold down\n");
-				break;
-			case 0x1f:
-				gf_opticalfp_irq_handler(0);
-				TPD_INFO("touchhold up\n");
-				break;
-			}
+			(touchhold_flag == 0x0f) ? (gf_opticalfp_irq_handler(1), TPD_INFO("touchhold down\n")) :
+			(touchhold_flag == 0x1f) ? (gf_opticalfp_irq_handler(0), TPD_INFO("touchhold up\n")) :
+			(void)0;
 		}
 	}
 
