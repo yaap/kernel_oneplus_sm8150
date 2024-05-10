@@ -635,6 +635,7 @@ bool was_hbm = false;
 extern bool HBM_flag;
 static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn)
 {
+	int blank;
 	struct msm_drm_notifier notifier_data;
 	struct dsi_panel *panel = sde_connector_panel(c_conn);
 	int status_flags = sde_connector_is_fod_enabled(c_conn);
@@ -642,6 +643,7 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 	if (!panel || status_flags == dsi_panel_get_fod_ui(panel))
 		return;
 
+	blank = status_flags ? 1 : 0;
 	if (status_flags) {
 		cpu_input_boost_kick_max(1200, true);
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
@@ -670,7 +672,7 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 	if (!status_flags && !was_hbm)
 		_sde_connector_update_bl_scale(c_conn);
 
-	notifier_data.data = &status_flags;
+	notifier_data.data = &blank;
 	notifier_data.id = connector_state_crtc_index;
 	msm_drm_notifier_call_chain(MSM_DRM_ONSCREENFINGERPRINT_EVENT, &notifier_data);
 }
