@@ -390,7 +390,7 @@ int __always_inline opticalfp_irq_handler(struct fp_underscreen_info* tp_info)
 
 	gf_dev->udfps_pressed = fp_tpinfo.touch_state;
 	sysfs_notify(&gf_dev->spi->dev.kobj, NULL, dev_attr_udfps_pressed.attr.name);
-	fp_tpinfo.touch_state = (char[]){(fp_tpinfo.touch_state == 1) ? 4 : 5};
+	fp_tpinfo.touch_state = (uint8_t){(fp_tpinfo.touch_state == 1) ? 4 : 5};
 	sendnlmsg_tp(&fp_tpinfo);
 
 	return 0;
