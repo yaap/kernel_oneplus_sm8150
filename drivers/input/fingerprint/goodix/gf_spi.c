@@ -22,7 +22,6 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/errno.h>
-#include <linux/msm_drm_notify.h>
 #include <linux/fs.h>
 #include <linux/gpio.h>
 #include <linux/init.h>
@@ -415,16 +414,9 @@ int __always_inline gf_opticalfp_irq_handler(int event)
 }
 EXPORT_SYMBOL(gf_opticalfp_irq_handler);
 
-static int __always_inline goodix_fb_state_chg_callback(
-	struct notifier_block *nb, unsigned long val, void *data)
+void __always_inline gf_opticalfp_ready(int ready)
 {
-	struct msm_drm_notifier *evdata = data;
-	unsigned int blank = *(unsigned int*)evdata->data;
-	if (val != MSM_DRM_ONSCREENFINGERPRINT_EVENT) {
-		return NOTIFY_OK;
-	}
-	sendnlmsg((char[]){(blank == 1) ? 6 : 7});
-	return NOTIFY_OK;
+	sendnlmsg((char[]){(ready == 1) ? 6 : 7});
 }
 
 static struct class *gf_class;
@@ -505,8 +497,6 @@ static int gf_probe(struct platform_device *pdev)
 		}
 	}
 
-	gf_dev->msm_drm_notif.notifier_call = goodix_fb_state_chg_callback;
-	status = msm_drm_register_client(&gf_dev->msm_drm_notif);
 	platform_set_drvdata(pdev, gf_dev);
 	status = sysfs_create_group(&gf_dev->spi->dev.kobj,
 			&gf_attribute_group);
@@ -538,7 +528,6 @@ static inline int gf_remove(struct platform_device *pdev)
 	struct gf_dev *gf_dev = &gf;
 
 	wakeup_source_trash(&fp_wakelock);
-	if (msm_drm_unregister_client(&gf_dev->msm_drm_notif))
 	if (gf_dev->input)
 		input_unregister_device(gf_dev->input);
 	input_free_device(gf_dev->input);
