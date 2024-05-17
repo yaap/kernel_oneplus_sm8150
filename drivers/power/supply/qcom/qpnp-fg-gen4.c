@@ -4508,7 +4508,7 @@ static int fg_psy_get_property(struct power_supply *psy,
 		if (!get_extern_fg_regist_done() && get_extern_bq_present())
 			pval->intval = -EINVAL;
 		else if (fg->use_external_fg && external_fg && external_fg->get_batt_full_chg_capacity)
-			pval->intval = external_fg->get_batt_full_chg_capacity();
+			pval->intval = external_fg->get_batt_full_chg_capacity() * 1000;
 		else {
 			rc = fg_gen4_get_learned_capacity(chip, &temp);
 			if (!rc)
