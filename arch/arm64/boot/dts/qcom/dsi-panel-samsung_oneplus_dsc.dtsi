@@ -508,10 +508,33 @@
 				39 01 00 00 00 00 03 F0 A5 A5
 				];
 				qcom,mdss-dsi-panel-aod-on-command-1 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 03
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 80
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-on-command-2 = [
 				];
+				qcom,mdss-dsi-panel-aod-on-command-5 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 02
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 00
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
+				];
 				qcom,mdss-dsi-panel-aod-off-command = [
+				05 01 00 00 00 00 01 28
+				39 01 00 00 00 00 03 F0 5A 5A
+				39 01 00 00 00 00 03 B0 A8 B1
+				15 01 00 00 00 00 02 B1 01
+				15 01 00 00 00 00 02 53 20 /* write ctl 60 hz */
+				39 01 00 00 00 00 03 B0 3F B5
+				15 01 00 00 22 00 02 B5 85 /* swire refresh on */
+				39 01 00 00 11 00 03 F0 A5 A5
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-off-samsung-command = [
 				];
@@ -730,6 +753,7 @@
 				qcom,mdss-dsi-panel-hbm-off-aod-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-panel-aod-on-command-1-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-on-command-2-state = "dsi_lp_mode";
+				qcom,mdss-dsi-panel-aod-on-command-5-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-off-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-pre-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-command-state = "dsi_lp_mode";
@@ -1131,10 +1155,33 @@
 				39 01 00 00 00 00 03 F0 A5 A5
 				];
 				qcom,mdss-dsi-panel-aod-on-command-1 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 03
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 80
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-on-command-2 = [
 				];
+				qcom,mdss-dsi-panel-aod-on-command-5 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 02
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 00
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
+				];
 				qcom,mdss-dsi-panel-aod-off-command = [
+				05 01 00 00 00 00 01 28
+				39 01 00 00 00 00 03 F0 5A 5A
+				39 01 00 00 00 00 03 B0 A8 B1
+				15 01 00 00 00 00 02 B1 01
+				15 01 00 00 00 00 02 53 20 /* write ctl 60 hz */
+				39 01 00 00 00 00 03 B0 3F B5
+				15 01 00 00 22 00 02 B5 85 /* swire refresh on */
+				39 01 00 00 11 00 03 F0 A5 A5
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-off-samsung-command = [
 				];
@@ -1355,6 +1402,7 @@
 				qcom,mdss-dsi-panel-hbm-off-aod-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-panel-aod-on-command-1-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-on-command-2-state = "dsi_lp_mode";
+				qcom,mdss-dsi-panel-aod-on-command-5-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-off-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-pre-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-command-state = "dsi_lp_mode";
@@ -1760,10 +1808,33 @@
 				39 01 00 00 00 00 03 F0 A5 A5
 				];
 				qcom,mdss-dsi-panel-aod-on-command-1 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 03
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 80
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-on-command-2 = [
 				];
+				qcom,mdss-dsi-panel-aod-on-command-5 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 02
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 00
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
+				];
 				qcom,mdss-dsi-panel-aod-off-command = [
+				05 01 00 00 00 00 01 28
+				39 01 00 00 00 00 03 F0 5A 5A
+				39 01 00 00 00 00 03 B0 A8 B1
+				15 01 00 00 00 00 02 B1 01
+				15 01 00 00 00 00 02 53 20 /* write ctl 60 hz */
+				39 01 00 00 00 00 03 B0 3F B5
+				15 01 00 00 22 00 02 B5 85 /* swire refresh on */
+				39 01 00 00 11 00 03 F0 A5 A5
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-off-samsung-command = [
 				];
@@ -1982,6 +2053,7 @@
 				qcom,mdss-dsi-panel-hbm-off-aod-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-panel-aod-on-command-1-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-on-command-2-state = "dsi_lp_mode";
+				qcom,mdss-dsi-panel-aod-on-command-5-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-off-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-pre-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-command-state = "dsi_lp_mode";
@@ -2382,10 +2454,33 @@
 				39 01 00 00 00 00 03 F0 A5 A5
 				];
 				qcom,mdss-dsi-panel-aod-on-command-1 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 03
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 80
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-on-command-2 = [
 				];
+				qcom,mdss-dsi-panel-aod-on-command-5 = [
+				39 01 00 00 00 00 03 F0 5A 5A /* Unlock */
+				15 01 00 00 00 00 02 53 02
+				39 01 00 00 00 00 03 B0 05 BB
+				15 01 00 00 00 00 02 BB 00
+				39 01 00 00 00 00 03 F0 A5 A5 /* Lock */
+				05 01 00 00 00 00 01 29
+				];
 				qcom,mdss-dsi-panel-aod-off-command = [
+				05 01 00 00 00 00 01 28
+				39 01 00 00 00 00 03 F0 5A 5A
+				39 01 00 00 00 00 03 B0 A8 B1
+				15 01 00 00 00 00 02 B1 01
+				15 01 00 00 00 00 02 53 20 /* write ctl 60 hz */
+				39 01 00 00 00 00 03 B0 3F B5
+				15 01 00 00 22 00 02 B5 85 /* swire refresh on */
+				39 01 00 00 11 00 03 F0 A5 A5
+				05 01 00 00 00 00 01 29
 				];
 				qcom,mdss-dsi-panel-aod-off-samsung-command = [
 				];
@@ -2606,6 +2701,7 @@
 				qcom,mdss-dsi-panel-hbm-off-aod-on-command-state = "dsi_hs_mode";
 				qcom,mdss-dsi-panel-aod-on-command-1-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-on-command-2-state = "dsi_lp_mode";
+				qcom,mdss-dsi-panel-aod-on-command-5-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-aod-off-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-pre-command-state = "dsi_lp_mode";
 				qcom,mdss-dsi-panel-serial-num-command-state = "dsi_lp_mode";
