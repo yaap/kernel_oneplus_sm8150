@@ -137,7 +137,7 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 	/* Initialize @best such that @best always has a valid CPU at the end */
 	struct cass_cpu_cand cands[2], *best = cands;
 	int this_cpu = raw_smp_processor_id();
-	unsigned long p_util, uc_min, group_lat_sens;
+	unsigned long p_util, uc_min;
 	bool has_idle = false;
 	int cidx = 0, cpu;
 
@@ -147,7 +147,6 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 	 */
 	p_util = rt ? 0 : task_util_est(p);
 	uc_min = uclamp_eff_value(p, UCLAMP_MIN);
-	group_lat_sens = task_group(p)->latency_sensitive;
 
 	/*
 	 * Find the best CPU to wake @p on. Although idle_get_state() requires
@@ -185,10 +184,9 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 		    available_idle_cpu(cpu) || sched_idle_cpu(cpu)) {
 			/*
 			 * A non-idle candidate may be better when @p is uclamp
-			 * boosted and not latency sensitive. Otherwise, always
-			 * prefer idle candidates.
+			 * boosted. Otherwise, always prefer idle candidates.
 			 */
-			if (!uc_min || (uc_min && group_lat_sens)) {
+			if (!uc_min) {
 				/* Discard any previous non-idle candidate */
 				if (!has_idle)
 					best = curr;
