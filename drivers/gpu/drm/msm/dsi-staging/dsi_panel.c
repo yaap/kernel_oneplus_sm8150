@@ -1135,12 +1135,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 
 	bl->real_bl_level = bl_lvl;
 
-	if (!panel->force_fod_dim_alpha) {
-		if (panel->aod_state > 1)
-			panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, panel->aod_state);
-		else
-			panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, bl_lvl);
-	}
+	if (!panel->force_fod_dim_alpha)
+		panel->fod_dim_alpha = dsi_panel_calc_fod_dim_alpha(panel, bl_lvl);
 
 	panel->dc_dim_alpha = dsi_panel_calc_dc_dim_alpha(panel, bl_lvl);
 
@@ -5044,39 +5040,6 @@ error:
 	return rc;
 }
 
-struct blbl {
-	u32 bl;
-	u32 aod_bl;
-};
-
-struct blbl aod_bl_lut[] = {
-	{0, 1},
-	{10, 1},
-	{40, 9},
-	{90, 30},
-	{120, 60},
-	{280, 100},
-};
-
-u32 dsi_panel_get_aod_bl(u32 cur_bl) {
-	int i;
-
-	for (i = 0; i < 6; i++)
-		if (aod_bl_lut[i].bl >= cur_bl)
-			break;
-	if (i == 0)
-		return aod_bl_lut[i].aod_bl;
-
-	if (i == 5)
-		return aod_bl_lut[i - 1].aod_bl;
-
-	return interpolate(cur_bl,
-		aod_bl_lut[i - 1].bl,
-		aod_bl_lut[i].bl,
-		aod_bl_lut[i - 1].aod_bl,
-		aod_bl_lut[i].aod_bl);
-}
-
 int dsi_panel_set_lp1(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -5112,21 +5075,17 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		dsi_panel_set_fod_ui(panel, false);
 
 	if (!panel->aod_state) {
-		if (panel->hw_type == DSI_PANEL_SAMSUNG_S6E3HC2) {
-			panel->aod_state = dsi_panel_get_aod_bl(cur_bl);
-			dsi_panel_set_backlight(panel, panel->aod_state);
-		} else {
-			panel->aod_state = 1;
-			if (cur_bl > 90)
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
-			else
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
+		panel->aod_state = true;
+		if (cur_bl > 90)
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
+		else
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
 
-			if (rc)
-				pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
-				       panel->name, rc);
-		}
+		if (rc)
+			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
+			       panel->name, rc);
 	}
+
 	panel->need_power_on_backlight = true;
 
 exit:
@@ -5157,20 +5116,15 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (!panel->aod_state) {
-		if (panel->hw_type == DSI_PANEL_SAMSUNG_S6E3HC2) {
-			panel->aod_state = dsi_panel_get_aod_bl(cur_bl);
-			dsi_panel_set_backlight(panel, panel->aod_state);
-		} else {
-			panel->aod_state = 1;
-			if (cur_bl > 90)
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
-			else
-				rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
+		panel->aod_state = true;
+		if (cur_bl > 90)
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_5);
+		else
+			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_ON_1);
 
-			if (rc)
-				pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
-				       panel->name, rc);
-		}
+		if (rc)
+			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_ON_5 cmd, rc=%d\n",
+			       panel->name, rc);
 	}
 	//It has been observed entering lp2 without first entering lp1 on doze.
 	//In this case regulator stays in NORMAL mode, which is a power regression.
@@ -5178,6 +5132,7 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 	    panel->power_mode != SDE_MODE_DPMS_LP1)
 		dsi_pwr_panel_regulator_mode_set(&panel->power_info,
 			"ibb", REGULATOR_MODE_IDLE);
+
 	panel->need_power_on_backlight = true;
 exit:
 	mutex_unlock(&panel->panel_lock);
@@ -5211,7 +5166,7 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 		       panel->name, rc);
 
 	if (panel->aod_state) {
-		panel->aod_state = 0;
+		panel->aod_state = false;
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_AOD_OFF);
 		if (rc)
 			pr_debug("[%s] failed to send DSI_CMD_SET_AOD_OFF cmd, rc=%d\n",
@@ -5698,7 +5653,7 @@ int dsi_panel_disable(struct dsi_panel *panel)
 		panel->aod_status = 0;
 
 	if (panel->aod_state)
-		panel->aod_state = 0;
+		panel->aod_state = false;
 
 	if (panel->fod_ui)
 		dsi_panel_set_fod_ui(panel, false);
