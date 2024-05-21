@@ -1161,6 +1161,14 @@ static inline u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 	if (event_id == SEC_STATUS_EVENT) {
 		struct sec_event_status *p_event_status =
 				(struct sec_event_status *)chip_info->first_event;
+		if (p_event_status->status_id == SEC_EMPTY_EVENT) {
+			ret = touch_i2c_write_block(chip_info->client, SEC_CMD_CLEAR_EVENT_STACK, 0, NULL);
+			if (ret < 0) {
+				TPD_INFO("%s: clear event buffer failed\n", __func__);
+			}
+			return IRQ_IGNORE;
+		}
+
 		switch (p_event_status->status_id) {
 		case SEC_ACK_BOOT_COMPLETE:
 			if (p_event_status->status_data_1 == 0x20) {
