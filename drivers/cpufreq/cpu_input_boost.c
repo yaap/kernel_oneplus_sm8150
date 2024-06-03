@@ -330,9 +330,9 @@ static void cpu_input_boost_input_event(struct input_handle *handle,
 					unsigned int type, unsigned int code,
 					int value)
 {
-	struct boost_drv *b = handle->handler->private;
+	//struct boost_drv *b = handle->handler->private;
 
-	__cpu_input_boost_kick(b);
+	//__cpu_input_boost_kick(b);
 
 #if(CONFIG_INPUT_BOOST_DURATION_MS != 0)
 	last_input_time = jiffies;
