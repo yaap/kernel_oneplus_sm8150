@@ -221,9 +221,9 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 
 void cpu_input_boost_kick_max(unsigned int duration_ms, bool always)
 {
-	struct boost_drv *b = &boost_drv_g;
+	//struct boost_drv *b = &boost_drv_g;
 
-	__cpu_input_boost_kick_max(b, duration_ms, always);
+	//__cpu_input_boost_kick_max(b, duration_ms, always);
 	last_mb_time = jiffies;
 }
 
