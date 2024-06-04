@@ -13,10 +13,6 @@
 #include <linux/event_tracking.h>
 #include <uapi/linux/sched/types.h>
 
-#if(CONFIG_INPUT_BOOST_DURATION_MS == 0)
-	unsigned long last_input_time;
-#endif
-
 enum {
 	SCREEN_ON,
 	INPUT_BOOST,
@@ -224,9 +220,7 @@ static void devfreq_boost_input_event(struct input_handle *handle,
 	for (i = 0; i < DEVFREQ_MAX; i++)
 		__devfreq_boost_kick(d->devices + i);
 
-#if(CONFIG_INPUT_BOOST_DURATION_MS == 0)
 	last_input_time = jiffies;
-#endif
 }
 
 static int devfreq_boost_input_connect(struct input_handler *handler,
