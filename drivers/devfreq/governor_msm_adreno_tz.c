@@ -371,17 +371,19 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 	scm_data[0] = level;
 	scm_data[1] = priv->bin.total_time;
 	switch (kp_active_mode()) {
-	case 0:
-		scm_data[2] = priv->bin.busy_time * 220 / 100;
-	break;
-	case 2:
-		scm_data[2] = priv->bin.busy_time * 220 / 100;
+	case 1:
+		scm_data[2] = priv->bin.busy_time;
 	break;
 	case 3:
 		scm_data[2] = priv->bin.busy_time * 250 / 100;
 	break;
 	default:
-		scm_data[2] = priv->bin.busy_time;
+		if (time_before(jiffies, last_input_time + msecs_to_jiffies(3500))) {
+			scm_data[2] = priv->bin.busy_time * 220 / 100;
+		} else {
+			scm_data[2] = priv->bin.busy_time;
+		}
+	break;
 	}
 
 	scm_data[3] = context_count;
