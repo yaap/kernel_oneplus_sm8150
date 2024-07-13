@@ -71,14 +71,11 @@ struct sock *gf_nl_sk = NULL;
 
 static inline void sendnlmsg(char *msg)
 {
-	struct nlmsghdr *nlh;
-	struct sk_buff *skb = alloc_skb(1, GFP_KERNEL | GFP_DMA);
+	struct sk_buff *skb = alloc_skb(1, GFP_KERNEL);
+	struct nlmsghdr *nlh = nlmsg_put(skb, 0, 0, 0, 1, 0);
 
-	nlh = nlmsg_put(skb, 0, 0, 0, 1, 0);
-	NETLINK_CB(skb).portid = 0;
-	NETLINK_CB(skb).dst_group = 0;
 	*((char *)NLMSG_DATA(nlh)) = *msg;
-	netlink_unicast(gf_nl_sk, skb, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
+	netlink_unicast(gf_nl_sk, skb, pid, MSG_DONTWAIT);
 }
 
 static inline void sendnlmsg_tp(struct fp_underscreen_info *msg)
