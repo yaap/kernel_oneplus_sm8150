@@ -80,22 +80,12 @@ static inline void sendnlmsg(char *msg)
 
 static inline void sendnlmsg_tp(struct fp_underscreen_info *msg)
 {
-	struct sk_buff *skb_1;
-	struct nlmsghdr *nlh;
 	int len = sizeof(msg);
-	int ret = 0;
-	if (!msg || !gf_nl_sk || !pid) {
-		return ;
-	}
-	skb_1 = alloc_skb(len, GFP_KERNEL | GFP_DMA);
-	if (!skb_1) {
-		return;
-	}
-	nlh = nlmsg_put(skb_1, 0, 0, 0, len, 0);
-	NETLINK_CB(skb_1).portid = 0;
-	NETLINK_CB(skb_1).dst_group = 0;
-	memcpy(NLMSG_DATA(nlh), msg, len);//core
-	ret = netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT + MSG_NOSIGNAL);
+	struct sk_buff *skb_1 = alloc_skb(len, GFP_KERNEL);
+	struct nlmsghdr *nlh = nlmsg_put(skb_1, 0, 0, 0, len, 0);
+
+	*((struct fp_underscreen_info *)NLMSG_DATA(nlh)) = *msg;
+	netlink_unicast(gf_nl_sk, skb_1, pid, MSG_DONTWAIT);
 }
 
 static inline void nl_data_ready(struct sk_buff *__skb)
