@@ -229,8 +229,8 @@ static inline int irq_setup(struct gf_dev *gf_dev)
 {
 	int status;
 	gf_dev->irq = gpio_to_irq(gf_dev->irq_gpio);
-	status = request_threaded_irq(gf_dev->irq, NULL, gf_irq,
-			IRQF_TRIGGER_RISING | IRQF_ONESHOT |IRQF_NO_SUSPEND | IRQF_FORCE_RESUME,
+	status = request_irq(gf_dev->irq, gf_irq,
+			IRQF_TRIGGER_RISING | IRQF_NO_SUSPEND | IRQF_PERCPU,
 			"gf", gf_dev);
 
 	if (status) {
