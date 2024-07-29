@@ -653,7 +653,7 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 		return;
 
 	if (status_flags) {
-		cpu_input_boost_kick_max(1200, true);
+		cpu_input_boost_kick_max(1200);
 		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
 		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200, true);
 		new_status_flags |= (panel->bl_config.bl_level > BL_THRESHOLD) << STATUS_FLAG_BL_LEVEL;

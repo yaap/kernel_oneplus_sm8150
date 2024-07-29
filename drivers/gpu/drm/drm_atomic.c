@@ -31,6 +31,7 @@
 #include <drm/drm_mode.h>
 #include <drm/drm_print.h>
 #include <linux/devfreq_boost.h>
+#include <linux/cpu_input_boost.h>
 #include <linux/event_tracking.h>
 #include <linux/pm_qos.h>
 #include <linux/sync_file.h>
@@ -2268,6 +2269,7 @@ static int __drm_mode_atomic_ioctl(struct drm_device *dev, void *data,
 		if (time_before(jiffies, last_input_time + msecs_to_jiffies(7000))) {
 			devfreq_boost_kick(DEVFREQ_MSM_CPUBW);
 			devfreq_boost_kick(DEVFREQ_MSM_LLCCBW);
+			cpu_input_boost_kick();
 		}
 	}
 #endif
