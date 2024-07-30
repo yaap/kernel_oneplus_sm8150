@@ -2247,8 +2247,8 @@ long _do_fork(unsigned long clone_flags,
 	if (task_is_zygote(current)) {
 		if (time_before(jiffies, last_mb_time + msecs_to_jiffies(200))) {
 	                cpu_input_boost_kick_max(250);
-        	        devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500, true);
-                	devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 500, true);
+        	        devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 500);
+                	devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 500);
 		}
 	}
 
