@@ -654,8 +654,8 @@ static inline void sde_connector_pre_update_fod_hbm(struct sde_connector *c_conn
 
 	if (status_flags) {
 		cpu_input_boost_kick_max(1200);
-		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200, true);
-		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200, true);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1200);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1200);
 		new_status_flags |= (panel->bl_config.bl_level > BL_THRESHOLD) << STATUS_FLAG_BL_LEVEL;
 		new_status_flags |= (HBM_flag) << STATUS_FLAG_HBM;
 		new_status_flags |= ((panel->cur_mode->timing.refresh_rate < RR_THRESHOLD) && !(new_status_flags & STATUS_FLAG_HBM)) || panel->aod_state ? STATUS_FLAG_AOD : 0;
