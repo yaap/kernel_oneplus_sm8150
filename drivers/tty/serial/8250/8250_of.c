@@ -102,17 +102,8 @@ static int of_platform_serial_setup(struct platform_device *ofdev,
 	port->mapsize = resource_size(&resource);
 
 	/* Check for shifted address mapping */
-	if (of_property_read_u32(np, "reg-offset", &prop) == 0) {
-		if (prop >= port->mapsize) {
-			dev_warn(&ofdev->dev, "reg-offset %u exceeds region size %pa\n",
-				 prop, &port->mapsize);
-			ret = -EINVAL;
-			goto err_unprepare;
-		}
-
+	if (of_property_read_u32(np, "reg-offset", &prop) == 0)
 		port->mapbase += prop;
-		port->mapsize -= prop;
-	}
 
 	/* Compatibility with the deprecated pxa driver and 8250_pxa drivers. */
 	if (of_device_is_compatible(np, "mrvl,mmp-uart"))
