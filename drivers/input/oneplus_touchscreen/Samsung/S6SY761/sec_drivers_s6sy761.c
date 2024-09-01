@@ -1203,19 +1203,25 @@ static inline u8 sec_trigger_reason(void *chip_data, int gesture_enable,
 static int sec_get_touch_points(void *chip_data, struct point_info *points,
 				int max_num)
 {
-	struct chip_data_s6sy761 *chip_info = (struct chip_data_s6sy761 *)chip_data;
+	int i = 0;
+	int t_id = 0;
+	int ret = -1;
+	int left_event = 0;
+	struct sec_event_coordinate *p_event_coord = NULL;
 	uint32_t obj_attention = 0;
 	u8 *event_buff = dma_buffer->event_buff;
-	struct sec_event_coordinate *p_event_coord = NULL;
-	int i = 0, t_id = 0, left_event = 0, ret = -1;
+	struct chip_data_s6sy761 *chip_info =
+	    (struct chip_data_s6sy761 *)chip_data;
 
 	p_event_coord = (struct sec_event_coordinate *)chip_info->first_event;
-	t_id = p_event_coord->tid - 1;
-	if ((t_id >= 0) && (t_id < max_num)
-	&& ((p_event_coord->tchsta == SEC_COORDINATE_ACTION_PRESS)
-	|| (p_event_coord->tchsta == SEC_COORDINATE_ACTION_MOVE))) {
-		points[t_id].x = (p_event_coord->x_11_4 << 4) | (p_event_coord->x_3_0);
-		points[t_id].y = (p_event_coord->y_11_4 << 4) | (p_event_coord->y_3_0);
+	t_id = (p_event_coord->tid - 1);
+	if ((t_id < max_num)
+	    && ((p_event_coord->tchsta == SEC_COORDINATE_ACTION_PRESS)
+		|| (p_event_coord->tchsta == SEC_COORDINATE_ACTION_MOVE))) {
+		points[t_id].x =
+		    (p_event_coord->x_11_4 << 4) | (p_event_coord->x_3_0);
+		points[t_id].y =
+		    (p_event_coord->y_11_4 << 4) | (p_event_coord->y_3_0);
 		points[t_id].z = p_event_coord->z & 0x3F;
 		points[t_id].width_major = p_event_coord->major;
 		points[t_id].touch_major = p_event_coord->major;
@@ -1224,32 +1230,40 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points,
 		if (points[t_id].z <= 0) {
 			points[t_id].z = 1;
 		}
-		obj_attention |= (1 << t_id);	//set touch bit
+		obj_attention = obj_attention | (1 << t_id);	//set touch bit
 	}
 
 	left_event = chip_info->first_event[7] & 0x3F;
 	if (left_event == 0) {
 		return obj_attention;
 	} else if (left_event > max_num - 1) {
-		TPD_INFO("%s: read left event beyond max touch points\n", __func__);
+		TPD_INFO("%s: read left event beyond max touch points\n",
+			 __func__);
 		left_event = max_num - 1;
 	}
-
-	ret = touch_i2c_read_block(chip_info->client, SEC_READ_ALL_EVENT,
-			SEC_EVENT_BUFF_SIZE * left_event, &event_buff[0]);
+	ret =
+	    touch_i2c_read_block(chip_info->client, SEC_READ_ALL_EVENT,
+				 SEC_EVENT_BUFF_SIZE * left_event, &event_buff[0]);
 	if (ret < 0) {
 		TPD_INFO("%s: i2c read all event failed\n", __func__);
 		return obj_attention;
 	}
 
 	for (i = 0; i < left_event; i++) {
-		p_event_coord = (struct sec_event_coordinate *)&event_buff[i * SEC_EVENT_BUFF_SIZE];
-		t_id = p_event_coord->tid - 1;
-		if ((t_id >= 0) && (t_id < max_num)
-		&& ((p_event_coord->tchsta == SEC_COORDINATE_ACTION_PRESS)
-		|| (p_event_coord->tchsta == SEC_COORDINATE_ACTION_MOVE))) {
-			points[t_id].x = (p_event_coord->x_11_4 << 4) | (p_event_coord->x_3_0);
-			points[t_id].y = (p_event_coord->y_11_4 << 4) | (p_event_coord->y_3_0);
+		p_event_coord =
+		    (struct sec_event_coordinate *)&event_buff[i *
+							       SEC_EVENT_BUFF_SIZE];
+		t_id = (p_event_coord->tid - 1);
+		if ((t_id < max_num)
+		    && ((p_event_coord->tchsta == SEC_COORDINATE_ACTION_PRESS)
+			|| (p_event_coord->tchsta ==
+			    SEC_COORDINATE_ACTION_MOVE))) {
+			points[t_id].x =
+			    (p_event_coord->x_11_4 << 4) | (p_event_coord->
+							    x_3_0);
+			points[t_id].y =
+			    (p_event_coord->y_11_4 << 4) | (p_event_coord->
+							    y_3_0);
 			points[t_id].z = p_event_coord->z & 0x3F;
 			points[t_id].width_major = p_event_coord->major;
 			points[t_id].touch_major = p_event_coord->major;
@@ -1258,7 +1272,7 @@ static int sec_get_touch_points(void *chip_data, struct point_info *points,
 			if (points[t_id].z <= 0) {
 				points[t_id].z = 1;
 			}
-			obj_attention |= (1 << t_id); //set touch bit
+			obj_attention = obj_attention | (1 << t_id);	//set touch bit
 		}
 	}
 
