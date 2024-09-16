@@ -754,10 +754,6 @@ KBUILD_CFLAGS	+= -mllvm -polly-run-dce
 endif
 endif
 
-KBUILD_CFLAGS  += -mllvm -inline-threshold=1300
-KBUILD_CFLAGS  += -mllvm -inlinehint-threshold=2000
-KBUILD_CFLAGS  += -mllvm -unroll-threshold=900
-
 else
 KBUILD_CFLAGS   += -O2
 KBUILD_CFLAGS	+= -mcpu=cortex-a76.cortex-a55 -mtune=cortex-a76.cortex-a55
