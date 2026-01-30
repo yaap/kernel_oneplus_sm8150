@@ -362,7 +362,7 @@ static void derive_keys(struct noise_symmetric_key *first_dst,
 			struct noise_symmetric_key *second_dst,
 			const u8 chaining_key[NOISE_HASH_LEN])
 {
-	u64 birthdate = ktime_get_coarse_boottime_ns();
+	u64 birthdate = ktime_get_coarse_boottime();
 	kdf(first_dst->key, second_dst->key, NULL, NULL,
 	    NOISE_SYMMETRIC_KEY_LEN, NOISE_SYMMETRIC_KEY_LEN, 0, 0,
 	    chaining_key);
@@ -603,7 +603,7 @@ wg_noise_handshake_consume_initiation(struct message_handshake_initiation *src,
 			       NOISE_TIMESTAMP_LEN) <= 0;
 	flood_attack = (s64)handshake->last_initiation_consumption +
 			       NSEC_PER_SEC / INITIATIONS_PER_SECOND >
-		       (s64)ktime_get_coarse_boottime_ns();
+		       (s64)ktime_get_coarse_boottime();
 	up_read(&handshake->lock);
 	if (replay_attack || flood_attack)
 		goto out;
@@ -616,7 +616,7 @@ wg_noise_handshake_consume_initiation(struct message_handshake_initiation *src,
 	memcpy(handshake->hash, hash, NOISE_HASH_LEN);
 	memcpy(handshake->chaining_key, chaining_key, NOISE_HASH_LEN);
 	handshake->remote_index = src->sender_index;
-	initiation_consumption = ktime_get_coarse_boottime_ns();
+	initiation_consumption = ktime_get_coarse_boottime();
 	if ((s64)(handshake->last_initiation_consumption - initiation_consumption) < 0)
 		handshake->last_initiation_consumption = initiation_consumption;
 	handshake->state = HANDSHAKE_CONSUMED_INITIATION;

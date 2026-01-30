@@ -120,7 +120,7 @@ static void wg_receive_handshake_packet(struct wg_device *wg,
 	under_load = atomic_read(&wg->handshake_queue_len) >=
 			MAX_QUEUED_INCOMING_HANDSHAKES / 8;
 	if (under_load) {
-		last_under_load = ktime_get_coarse_boottime_ns();
+		last_under_load = ktime_get_coarse_boottime();
 	} else if (last_under_load) {
 		under_load = !wg_birthdate_has_expired(last_under_load, 1);
 		if (!under_load)

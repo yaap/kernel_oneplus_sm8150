@@ -100,7 +100,7 @@ void wg_noise_handshake_init(struct noise_handshake *handshake,
 void wg_noise_handshake_clear(struct noise_handshake *handshake);
 static inline void wg_noise_reset_last_sent_handshake(atomic64_t *handshake_ns)
 {
-	atomic64_set(handshake_ns, ktime_get_coarse_boottime_ns() -
+	atomic64_set(handshake_ns, ktime_get_coarse_boottime() -
 				       (u64)(REKEY_TIMEOUT + 1) * NSEC_PER_SEC);
 }
 
