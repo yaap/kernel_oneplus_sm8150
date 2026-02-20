@@ -762,7 +762,7 @@ struct devkmsg_user {
 
 static ssize_t devkmsg_write(struct kiocb *iocb, struct iov_iter *from)
 {
-	char *buf, *line;
+	char buf[LOG_LINE_MAX + 1], *line;
 	int level = default_message_loglevel;
 	int facility = 1;	/* LOG_USER */
 	struct file *file = iocb->ki_filp;
@@ -782,10 +782,6 @@ static ssize_t devkmsg_write(struct kiocb *iocb, struct iov_iter *from)
 		if (!___ratelimit(&user->rs, current->comm))
 			return ret;
 	}
-
-	buf = kmalloc(len+1, GFP_KERNEL);
-	if (buf == NULL)
-		return -ENOMEM;
 
 	buf[len] = '\0';
 	if (!copy_from_iter_full(buf, len, from)) {
@@ -818,14 +814,7 @@ static ssize_t devkmsg_write(struct kiocb *iocb, struct iov_iter *from)
 		}
 	}
 
-	if ((strstr(line, "healthd")) || (strstr(line, "logd")) ||
-		 strstr(line, "dashd")) {
-		kfree(buf);
-		return len;
-	}
-
 	printk_emit(facility, level, NULL, 0, "%s", line);
-	kfree(buf);
 	return ret;
 }
 
@@ -1234,7 +1223,6 @@ static size_t print_time(u64 ts, char *buf)
 	if (!printk_time)
 		return 0;
 
-	ts += get_total_sleep_time_nsec();
 	rem_nsec = do_div(ts, 1000000000);
 
 	if (!buf)
@@ -1313,8 +1301,6 @@ static int syslog_print(char __user *buf, int size)
 	struct printk_log *msg;
 	int len = 0;
 
-	memset(&text, 0, LOG_LINE_MAX + PREFIX_MAX);
-
 	while (size > 0) {
 		size_t n;
 		size_t skip;
@@ -1367,10 +1353,12 @@ static int syslog_print(char __user *buf, int size)
 
 static int syslog_print_all(char __user *buf, int size, bool clear)
 {
-	char text[LOG_LINE_MAX + PREFIX_MAX];
+	char *text;
 	int len = 0;
 
-	memset(&text, 0, LOG_LINE_MAX + PREFIX_MAX);
+	text = kmalloc(LOG_LINE_MAX + PREFIX_MAX, GFP_KERNEL);
+	if (!text)
+		return -ENOMEM;
 
 	logbuf_lock_irq();
 	if (buf) {
@@ -1441,6 +1429,7 @@ static int syslog_print_all(char __user *buf, int size, bool clear)
 	}
 	logbuf_unlock_irq();
 
+	kfree(text);
 	return len;
 }
 
@@ -1697,6 +1686,12 @@ static int console_trylock_spinning(void)
 	 * complain.
 	 */
 	mutex_acquire(&console_lock_dep_map, 0, 1, _THIS_IP_);
+
+	/*
+	 * Update @console_may_schedule for trylock because the previous
+	 * owner may have been schedulable.
+	 */
+	console_may_schedule = 0;
 
 	return 1;
 }
@@ -2147,14 +2142,6 @@ static int __init console_setup(char *str)
 }
 __setup("console=", console_setup);
 
-
-int __init force_oem_console_setup(char *str)
-{
-	console_setup(str);
-	return 1;
-}
-EXPORT_SYMBOL(force_oem_console_setup);
-
 /**
  * add_preferred_console - add a device to the list of preferred consoles.
  * @name: device name
@@ -2173,7 +2160,7 @@ int add_preferred_console(char *name, int idx, char *options)
 	return __add_preferred_console(name, idx, options, NULL);
 }
 
-bool console_suspend_enabled = false;
+bool console_suspend_enabled = true;
 EXPORT_SYMBOL(console_suspend_enabled);
 
 static int __init console_suspend_disable(char *str)
@@ -3061,12 +3048,19 @@ void kmsg_dump(enum kmsg_dump_reason reason)
 	struct kmsg_dumper *dumper;
 	unsigned long flags;
 
-	if ((reason > KMSG_DUMP_OOPS) && !always_kmsg_dump)
-		return;
-
 	rcu_read_lock();
 	list_for_each_entry_rcu(dumper, &dump_list, list) {
-		if (dumper->max_reason && reason > dumper->max_reason)
+		enum kmsg_dump_reason max_reason = dumper->max_reason;
+
+		/*
+		 * If client has not provided a specific max_reason, default
+		 * to KMSG_DUMP_OOPS, unless always_kmsg_dump was set.
+		 */
+		if (max_reason == KMSG_DUMP_UNDEF) {
+			max_reason = always_kmsg_dump ? KMSG_DUMP_MAX :
+							KMSG_DUMP_OOPS;
+		}
+		if (reason > max_reason)
 			continue;
 
 		/* initialize iterator with data about the stored records */

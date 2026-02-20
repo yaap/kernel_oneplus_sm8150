@@ -466,6 +466,12 @@
  *	simple integer value.  When @arg represents a user space pointer, it
  *	should never be used by the security module.
  *	Return 0 if permission is granted.
+ * @file_ioctl_compat:
+ *	@file contains the file structure.
+ *	@cmd contains the operation to perform.
+ *	@arg contains the operational arguments.
+ *	Check permission for a compat ioctl operation on @file.
+ *	Return 0 if permission is granted.
  * @mmap_addr :
  *	Check permissions for a mmap operation at @addr.
  *	@addr contains virtual address that will be used for the operation.
@@ -1526,6 +1532,8 @@ union security_list_options {
 	void (*file_free_security)(struct file *file);
 	int (*file_ioctl)(struct file *file, unsigned int cmd,
 				unsigned long arg);
+	int (*file_ioctl_compat)(struct file *file, unsigned int cmd,
+				unsigned long arg);
 	int (*mmap_addr)(unsigned long addr);
 	int (*mmap_file)(struct file *file, unsigned long reqprot,
 				unsigned long prot, unsigned long flags);
@@ -1582,28 +1590,28 @@ union security_list_options {
 	int (*msg_msg_alloc_security)(struct msg_msg *msg);
 	void (*msg_msg_free_security)(struct msg_msg *msg);
 
-	int (*msg_queue_alloc_security)(struct msg_queue *msq);
-	void (*msg_queue_free_security)(struct msg_queue *msq);
-	int (*msg_queue_associate)(struct msg_queue *msq, int msqflg);
-	int (*msg_queue_msgctl)(struct msg_queue *msq, int cmd);
-	int (*msg_queue_msgsnd)(struct msg_queue *msq, struct msg_msg *msg,
+	int (*msg_queue_alloc_security)(struct kern_ipc_perm *msq);
+	void (*msg_queue_free_security)(struct kern_ipc_perm *msq);
+	int (*msg_queue_associate)(struct kern_ipc_perm *msq, int msqflg);
+	int (*msg_queue_msgctl)(struct kern_ipc_perm *msq, int cmd);
+	int (*msg_queue_msgsnd)(struct kern_ipc_perm *msq, struct msg_msg *msg,
 				int msqflg);
-	int (*msg_queue_msgrcv)(struct msg_queue *msq, struct msg_msg *msg,
+	int (*msg_queue_msgrcv)(struct kern_ipc_perm *msq, struct msg_msg *msg,
 				struct task_struct *target, long type,
 				int mode);
 
-	int (*shm_alloc_security)(struct shmid_kernel *shp);
-	void (*shm_free_security)(struct shmid_kernel *shp);
-	int (*shm_associate)(struct shmid_kernel *shp, int shmflg);
-	int (*shm_shmctl)(struct shmid_kernel *shp, int cmd);
-	int (*shm_shmat)(struct shmid_kernel *shp, char __user *shmaddr,
+	int (*shm_alloc_security)(struct kern_ipc_perm *shp);
+	void (*shm_free_security)(struct kern_ipc_perm *shp);
+	int (*shm_associate)(struct kern_ipc_perm *shp, int shmflg);
+	int (*shm_shmctl)(struct kern_ipc_perm *shp, int cmd);
+	int (*shm_shmat)(struct kern_ipc_perm *shp, char __user *shmaddr,
 				int shmflg);
 
-	int (*sem_alloc_security)(struct sem_array *sma);
-	void (*sem_free_security)(struct sem_array *sma);
-	int (*sem_associate)(struct sem_array *sma, int semflg);
-	int (*sem_semctl)(struct sem_array *sma, int cmd);
-	int (*sem_semop)(struct sem_array *sma, struct sembuf *sops,
+	int (*sem_alloc_security)(struct kern_ipc_perm *sma);
+	void (*sem_free_security)(struct kern_ipc_perm *sma);
+	int (*sem_associate)(struct kern_ipc_perm *sma, int semflg);
+	int (*sem_semctl)(struct kern_ipc_perm *sma, int cmd);
+	int (*sem_semop)(struct kern_ipc_perm *sma, struct sembuf *sops,
 				unsigned nsops, int alter);
 
 	int (*netlink_send)(struct sock *sk, struct sk_buff *skb);
@@ -1824,6 +1832,7 @@ struct security_hook_heads {
 	struct list_head file_alloc_security;
 	struct list_head file_free_security;
 	struct list_head file_ioctl;
+	struct list_head file_ioctl_compat;
 	struct list_head mmap_addr;
 	struct list_head mmap_file;
 	struct list_head file_mprotect;

@@ -27,6 +27,7 @@
 #include <linux/smp.h>
 #include <linux/cpumask.h>
 #include <linux/audit.h>
+#include <linux/overflow.h>
 #include <net/sock.h>
 /* needed for logical [in,out]-dev filtering */
 #include "../br_private.h"
